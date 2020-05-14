@@ -14,7 +14,7 @@ START:                  ; first instruction of program
     TRAP    #15 
     
 *_______Get User Input____________________________
-GetInput
+GetInputStartADR    
     LEA Mes_Start_Adr,  A1  ; ask start loc
     MOVE.B  #14, D0   
     Trap    #15     
@@ -28,7 +28,16 @@ GetInput
     JSR ConvertInput        
     * Store user Input start address to A5
     MOVE.L  D3, StartLocData
-    MOVE.L  StartLocData, A5    
+    MOVE.L  StartLocData, A5  
+    
+        
+GetInputEndADR  
+    CLR.L   D2  
+    CLR.L   D3  
+    LEA Mes_End_Adr,    A1  
+    MOVE.B  #13,    D0  
+    TRAP    #15 
+  
 *   Subroutine
 *_________________________________________________
 ConvertInput        
@@ -54,10 +63,12 @@ ConvertASCII
         CMPI.B  #$41,   D2  * if not compare with 41 (A)    
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
+        *CMPI.B  #$30,   D2  
+        *BLT Invalid 
         SUB.B   #$30,   D2     
         *BRA ConvertASCII  
-        *CMP.B  #$39,    D2  * Compare with 9 should be less or equal to be number      
-        *BGT Invalid   * if Sub is bigger than 9 than invalid    
+        *CMP.W  #$0009,    D2  * Compare with 9 should be less or equal to be number      
+        *BGE Invalid   * if Sub is bigger than 9 than invalid    
         RTS 
 IsLetter
         * figure out either small leter or capital letter   
@@ -66,9 +77,6 @@ IsLetter
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
         SUB.B   #$37,   D2   * 46 - 37 = F
-        *CMPI.B  #$47,   D2      
-        *BGE  Invalid 
-         
         RTS 
 SmallLetter  
         SUB.B   #$57,   D2    
@@ -83,10 +91,11 @@ Invalid
         LEA Mes_Invalid, A1 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        
-        MOVE.B  #9,    D0     
-        TRAP    #15  
-    SIMHALT             ; halt simulator
+        *JSR GoBack
+*Finish 
+*        RTS 
+      
+   
 
 * Put variables and constants here
 * Basic Print Message   
@@ -108,6 +117,7 @@ Extra_Space DC.B    CR, LF, 0
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~
