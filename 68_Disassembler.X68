@@ -23,12 +23,17 @@ GetInput
     MOVE.B  #2, D0  
     TRAP    #15 
     
-    
-    
+    CLR.L   D0
+        
+   
 *   Subroutine
 *_________________________________________________
-ConvertInput    
-       MOVE.B  (A1)+,  D0   
+ConvertInput        
+       MOVE.B  (A1)+,  D0
+       JSR    ConvertASCII
+       ADDA.L    D0, A2    
+       LSL.B    #4, D0  
+       *LSR.B    
 ConvertASCII
         * 30~39 Number
         * 41~46 Cap Letter Till F
@@ -39,14 +44,15 @@ ConvertASCII
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
         SUB.B   #$30,   D0   
-        BRA ConvertASCII    
+        *BRA ConvertASCII    
+        RTS 
 IsLetter
         * figure out either small leter or capital letter   
         CMPI.B  #$46,   D0  * Compare with small letter F         
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
-        
+        SUB.B   #$37,   D0  
 SmallLetter  
         * tomorrow continue (less than 39) then subtract 30
     SIMHALT             ; halt simulator
