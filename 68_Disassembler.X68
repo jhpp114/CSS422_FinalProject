@@ -38,6 +38,7 @@ GetInputEndADR
     MOVE.B  #13,    D0  
     TRAP    #15 
   
+    BRA Finish  
 *   Subroutine
 *_________________________________________________
 ConvertInput        
@@ -55,6 +56,10 @@ GoBack
         RTS    
        *LSR.B    
 ConvertASCII
+        CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
+        BLT Input_Error_Handler
+        CMPI.B  #$67,   D2    * Any input that are more or equal to 67 (g) is error 
+        BGE Input_Error_Handler  
         * 30~39 Number
         * 41~46 Cap Letter Till F
         * 61~66 Till f
@@ -83,16 +88,20 @@ SmallLetter
         RTS 
         * tomorrow continue (less than 39) then subtract 30
         
+Input_Error_Handler
+        BRA Invalid 
+        
 Invalid 
         LEA Extra_Space,    A1  
         MOVE.B  #14,    D0  
         TRAP    #15 
-        
         LEA Mes_Invalid, A1 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        *JSR GoBack
-*Finish 
+        MOVE.B  #9, D0    
+        TRAP    #15 
+Finish  SIMHALT             ; halt simulator
+
 *        RTS 
       
    
@@ -117,6 +126,7 @@ Extra_Space DC.B    CR, LF, 0
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
     END    START        ; last line of source
+
 
 
 
