@@ -18,7 +18,7 @@ GetInput
     LEA Mes_Start_Adr,  A1  ; ask start loc
     MOVE.B  #14, D0   
     Trap    #15     
-    
+    *BRA Invalid 
     LEA UserInput,  A1  
     MOVE.B  #2, D0  
     TRAP    #15 
@@ -26,7 +26,7 @@ GetInput
     CLR.L   D2  
     CLR.L   D3  
     JSR ConvertInput        
-   
+    * Store user Input start address to A5
     MOVE.L  D3, StartLocData
     MOVE.L  StartLocData, A5    
 *   Subroutine
@@ -55,7 +55,9 @@ ConvertASCII
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
         SUB.B   #$30,   D2     
-        *BRA ConvertASCII    
+        *BRA ConvertASCII  
+        CMPI.B  #$9,    D2  * Compare with 9 should be less or equal to be number      
+        BGT Invalid   * if Sub is bigger than 9 than invalid    
         RTS 
 IsLetter
         * figure out either small leter or capital letter   
@@ -69,6 +71,18 @@ SmallLetter
         SUB.B   #$57,   D2    
         RTS 
         * tomorrow continue (less than 39) then subtract 30
+        
+Invalid 
+        LEA Extra_Space,    A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        
+        LEA Mes_Invalid, A1 
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        
+        MOVE.B  #9,    D0     
+        TRAP    #15  
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -82,11 +96,14 @@ Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
 Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
 Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 
+Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
+          DC.B 'Terminating Program.',  CR, LF, 0     
+Extra_Space DC.B    CR, LF, 0   
 
 * Define Storage
 *_____________________________________________________________________
 UserInput   DS.L    1   
-StartLocData    DS.L    1   
+StartLocData    DS.L    1   * store starting address
     END    START        ; last line of source
 
 
