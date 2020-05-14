@@ -56,8 +56,8 @@ ConvertASCII
 IsNumber
         SUB.B   #$30,   D2     
         *BRA ConvertASCII  
-        CMPI.B  #$9,    D2  * Compare with 9 should be less or equal to be number      
-        BGT Invalid   * if Sub is bigger than 9 than invalid    
+        *CMP.B  #$39,    D2  * Compare with 9 should be less or equal to be number      
+        *BGT Invalid   * if Sub is bigger than 9 than invalid    
         RTS 
 IsLetter
         * figure out either small leter or capital letter   
@@ -65,7 +65,10 @@ IsLetter
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
-        SUB.B   #$37,   D2    
+        SUB.B   #$37,   D2   * 46 - 37 = F
+        *CMPI.B  #$47,   D2      
+        *BGE  Invalid 
+         
         RTS 
 SmallLetter  
         SUB.B   #$57,   D2    

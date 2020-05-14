@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/14/2020 2:44:29 AM
+Created On: 5/14/2020 4:34:30 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : 68k   Disassembler    
@@ -60,8 +60,8 @@ Created On: 5/14/2020 2:44:29 AM
 00001062                            56  IsNumber
 00001062  0402 0030                 57          SUB.B   #$30,   D2     
 00001066                            58          *BRA ConvertASCII  
-00001066  0C02 0009                 59          CMPI.B  #$9,    D2  * Compare with 9 should be less or equal to be number      
-0000106A  6E00 001C                 60          BGT Invalid   
+00001066  B43C 0039                 59          CMP.B  #$39,    D2  * Compare with 9 should be less or equal to be number      
+0000106A  6E00 001C                 60          BGT Invalid   * if Sub is bigger than 9 than invalid    
 0000106E  4E75                      61          RTS 
 00001070                            62  IsLetter
 00001070                            63          * figure out either small leter or capital letter   
@@ -69,46 +69,49 @@ Created On: 5/14/2020 2:44:29 AM
 00001074  6F00 0006                 65          BLE CapitalLetter   * if less or equal to 46 than small letter     
 00001078  6000 0008                 66          BRA SmallLetter     * else go to capital letter 
 0000107C                            67  CapitalLetter   
-0000107C  0402 0037                 68          SUB.B   #$37,   D2    
-00001080  4E75                      69          RTS 
-00001082                            70  SmallLetter  
-00001082  0402 0057                 71          SUB.B   #$57,   D2    
-00001086  4E75                      72          RTS 
-00001088                            73          * tomorrow continue (less than 39) then subtract 30
-00001088                            74          
-00001088                            75  Invalid 
-00001088  43F9 00001163             76          LEA Extra_Space,    A1  
-0000108E  103C 000E                 77          MOVE.B  #14,    D0  
-00001092  4E4F                      78          TRAP    #15 
-00001094                            79          
-00001094  43F9 00001127             80          LEA Mes_Invalid, A1 
-0000109A  103C 000E                 81          MOVE.B  #14,    D0  
-0000109E  4E4F                      82          TRAP    #15 
-000010A0                            83          
-000010A0  103C 0009                 84          MOVE.B  #9,    D0     
-000010A4  4E4F                      85          TRAP    #15  
-000010A6  FFFF FFFF                 86      SIMHALT             ; halt simulator
-000010AA                            87  
-000010AA                            88  * Put variables and constants here
-000010AA                            89  * Basic Print Message   
-000010AA                            90  *____________________________________________________________________
-000010AA  =0000000D                 91  CR  EQU $0D     *   Carriage Return
-000010AA  =0000000A                 92  LF  EQU $0A     *   Line Feed
-000010AA                            93  
-000010AA= 57 65 6C 63 6F 6D ...     94  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
-000010CB= 46 69 6E 61 6C 20 ...     95                              DC.B    'Final Project for CSS 422',    CR, LF, 0
-000010E7= 50 6C 65 61 73 65 ...     96  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-00001108= 50 6C 65 61 73 65 ...     97  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
-00001127                            98  
-00001127= 54 68 65 20 41 64 ...     99  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-0000114C= 54 65 72 6D 69 6E ...    100            DC.B 'Terminating Program.',  CR, LF, 0     
-00001163= 0D 0A 00                 101  Extra_Space DC.B    CR, LF, 0   
-00001166                           102  
-00001166                           103  * Define Storage
-00001166                           104  *_____________________________________________________________________
-00001166                           105  UserInput   DS.L    1   
-0000116A                           106  StartLocData    DS.L    1   * store starting address
-0000116E                           107      END    START        ; last line of source
+0000107C  0402 0037                 68          SUB.B   #$37,   D2   * 46 - 37 = F
+00001080                            69          *CMPI.B  #$47,   D2      
+00001080                            70          *BGE  Invalid 
+00001080                            71           
+00001080  4E75                      72          RTS 
+00001082                            73  SmallLetter  
+00001082  0402 0057                 74          SUB.B   #$57,   D2    
+00001086  4E75                      75          RTS 
+00001088                            76          * tomorrow continue (less than 39) then subtract 30
+00001088                            77          
+00001088                            78  Invalid 
+00001088  43F9 00001163             79          LEA Extra_Space,    A1  
+0000108E  103C 000E                 80          MOVE.B  #14,    D0  
+00001092  4E4F                      81          TRAP    #15 
+00001094                            82          
+00001094  43F9 00001127             83          LEA Mes_Invalid, A1 
+0000109A  103C 000E                 84          MOVE.B  #14,    D0  
+0000109E  4E4F                      85          TRAP    #15 
+000010A0                            86          
+000010A0  103C 0009                 87          MOVE.B  #9,    D0     
+000010A4  4E4F                      88          TRAP    #15  
+000010A6  FFFF FFFF                 89      SIMHALT             ; halt simulator
+000010AA                            90  
+000010AA                            91  * Put variables and constants here
+000010AA                            92  * Basic Print Message   
+000010AA                            93  *____________________________________________________________________
+000010AA  =0000000D                 94  CR  EQU $0D     *   Carriage Return
+000010AA  =0000000A                 95  LF  EQU $0A     *   Line Feed
+000010AA                            96  
+000010AA= 57 65 6C 63 6F 6D ...     97  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+000010CB= 46 69 6E 61 6C 20 ...     98                              DC.B    'Final Project for CSS 422',    CR, LF, 0
+000010E7= 50 6C 65 61 73 65 ...     99  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
+00001108= 50 6C 65 61 73 65 ...    100  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+00001127                           101  
+00001127= 54 68 65 20 41 64 ...    102  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
+0000114C= 54 65 72 6D 69 6E ...    103            DC.B 'Terminating Program.',  CR, LF, 0     
+00001163= 0D 0A 00                 104  Extra_Space DC.B    CR, LF, 0   
+00001166                           105  
+00001166                           106  * Define Storage
+00001166                           107  *_____________________________________________________________________
+00001166                           108  UserInput   DS.L    1   
+0000116A                           109  StartLocData    DS.L    1   * store starting address
+0000116E                           110      END    START        ; last line of source
 
 No errors detected
 No warnings generated
