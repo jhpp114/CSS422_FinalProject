@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/13/2020 11:43:41 PM
+Created On: 5/14/2020 1:52:22 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : 68k   Disassembler    
@@ -13,70 +13,85 @@ Created On: 5/13/2020 11:43:41 PM
 00001000                             9  
 00001000                            10  * Put program code here
 00001000                            11  *_______Basic Print Out Welcome Message__________   
-00001000  43F9 0000105C             12      LEA Mes_Welcome,    A1  
+00001000  43F9 00001084             12      LEA Mes_Welcome,    A1  
 00001006  103C 000D                 13      MOVE.B  #13,    D0  
 0000100A  4E4F                      14      TRAP    #15 
 0000100C                            15      
 0000100C                            16  *_______Get User Input____________________________
 0000100C                            17  GetInput
-0000100C  43F9 00001099             18      LEA Mes_Start_Adr,  A1  ; ask start loc
+0000100C  43F9 000010C1             18      LEA Mes_Start_Adr,  A1  ; ask start loc
 00001012  103C 000E                 19      MOVE.B  #14, D0   
 00001016  4E4F                      20      Trap    #15     
 00001018                            21      
-00001018  43F9 000010DA             22      LEA UserInput,  A1  
+00001018  43F9 00001102             22      LEA UserInput,  A1  
 0000101E  103C 0002                 23      MOVE.B  #2, D0  
 00001022  4E4F                      24      TRAP    #15 
 00001024                            25      
-00001024  4280                      26      CLR.L   D0
-00001026                            27          
-00001026                            28     
-00001026                            29  *   Subroutine
-00001026                            30  *_________________________________________________
-00001026                            31  ConvertInput        
-00001026  1019                      32         MOVE.B  (A1)+,  D0
-00001028  4EB9 00001032             33         JSR    ConvertASCII
-0000102E  D5C0                      34         ADDA.L    D0, A2    
-00001030  E908                      35         LSL.B    #4, D0  
-00001032                            36         *LSR.B    
-00001032                            37  ConvertASCII
-00001032                            38          * 30~39 Number
-00001032                            39          * 41~46 Cap Letter Till F
-00001032                            40          * 61~66 Till f
-00001032  0C00 0040                 41          CMPI.B   #$40,   D0 * 40 is immeidate data use CMPI  
-00001036  6D00 000A                 42          BLT IsNumber * If less than 40 then execute 
-0000103A  0C00 0041                 43          CMPI.B  #$41,   D0  * if not compare with 41 (A)    
-0000103E  6C00 0008                 44          BGE IsLetter    *Bigger than or Equal to 41 then execute    
-00001042                            45  IsNumber
-00001042  0400 0030                 46          SUB.B   #$30,   D0   
-00001046                            47          *BRA ConvertASCII    
-00001046  4E75                      48          RTS 
-00001048                            49  IsLetter
-00001048                            50          * figure out either small leter or capital letter   
-00001048  0C00 0046                 51          CMPI.B  #$46,   D0  * Compare with small letter F         
-0000104C  6F00 0006                 52          BLE CapitalLetter   * if less or equal to 46 than small letter     
-00001050  6000 0006                 53          BRA SmallLetter     * else go to capital letter 
-00001054                            54  CapitalLetter   
-00001054  0400 0037                 55          SUB.B   #$37,   D0  
-00001058                            56  SmallLetter  
-00001058                            57          * tomorrow continue (less than 39) then subtract 30
-00001058  FFFF FFFF                 58      SIMHALT             ; halt simulator
-0000105C                            59  
-0000105C                            60  * Put variables and constants here
-0000105C                            61  * Basic Print Message   
-0000105C                            62  *____________________________________________________________________
-0000105C  =0000000D                 63  CR  EQU $0D     *   Carriage Return
-0000105C  =0000000A                 64  LF  EQU $0A     *   Line Feed
-0000105C                            65  
-0000105C= 57 65 6C 63 6F 6D ...     66  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
-0000107D= 46 69 6E 61 6C 20 ...     67                              DC.B    'Final Project for CSS 422',    CR, LF, 0
-00001099= 50 6C 65 61 73 65 ...     68  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-000010BA= 50 6C 65 61 73 65 ...     69  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
-000010D9                            70  
-000010D9                            71  
-000010D9                            72  * Define Storage
-000010D9                            73  *_____________________________________________________________________
-000010DA                            74  UserInput   DS.L    1   
-000010DE                            75      END    START        ; last line of source
+00001024  4282                      26      CLR.L   D2  
+00001026  4283                      27      CLR.L   D3  
+00001028  4EB9 0000103A             28      JSR ConvertInput        
+0000102E                            29     
+0000102E  23C3 00001106             30      MOVE.L  D3, StartLocData
+00001034  2A79 00001106             31      MOVE.L  StartLocData, A5    
+0000103A                            32  *   Subroutine
+0000103A                            33  *_________________________________________________
+0000103A                            34  ConvertInput        
+0000103A  1419                      35         MOVE.B  (A1)+,  D2   
+0000103C  4EB9 00001052             36         JSR    ConvertASCII
+00001042  D682                      37         ADD.L    D2, D3        
+00001044  0C11 0000                 38         CMPI.B   #$0,    (A1)    
+00001048  6700 0006                 39         BEQ GoBack
+0000104C                            40         *LSL.B    #4, D2     
+0000104C                            41         *LSR.B    #4, D2    
+0000104C  E98B                      42         LSL.L    #4, D3  
+0000104E                            43         *ADD.L    D2, D3 
+0000104E  60EA                      44         BRA  ConvertInput
+00001050                            45  GoBack
+00001050  4E75                      46          RTS    
+00001052                            47         *LSR.B    
+00001052                            48  ConvertASCII
+00001052                            49          * 30~39 Number
+00001052                            50          * 41~46 Cap Letter Till F
+00001052                            51          * 61~66 Till f
+00001052  0C02 0040                 52          CMPI.B   #$40,   D2 * 40 is immeidate data use CMPI   
+00001056  6D00 000A                 53          BLT IsNumber * If less than 40 then execute 
+0000105A  0C02 0041                 54          CMPI.B  #$41,   D2  * if not compare with 41 (A)    
+0000105E  6C00 0008                 55          BGE IsLetter    *Bigger than or Equal to 41 then execute    
+00001062                            56  IsNumber
+00001062  0402 0030                 57          SUB.B   #$30,   D2     
+00001066                            58          *BRA ConvertASCII    
+00001066  4E75                      59          RTS 
+00001068                            60  IsLetter
+00001068                            61          * figure out either small leter or capital letter   
+00001068  0C02 0046                 62          CMPI.B  #$46,   D2  * Compare with small letter F            
+0000106C  6F00 0006                 63          BLE CapitalLetter   * if less or equal to 46 than small letter     
+00001070  6000 0008                 64          BRA SmallLetter     * else go to capital letter 
+00001074                            65  CapitalLetter   
+00001074  0402 0037                 66          SUB.B   #$37,   D2    
+00001078  4E75                      67          RTS 
+0000107A                            68  SmallLetter  
+0000107A  0402 0057                 69          SUB.B   #$57,   D2    
+0000107E  4E75                      70          RTS 
+00001080                            71          * tomorrow continue (less than 39) then subtract 30
+00001080  FFFF FFFF                 72      SIMHALT             ; halt simulator
+00001084                            73  
+00001084                            74  * Put variables and constants here
+00001084                            75  * Basic Print Message   
+00001084                            76  *____________________________________________________________________
+00001084  =0000000D                 77  CR  EQU $0D     *   Carriage Return
+00001084  =0000000A                 78  LF  EQU $0A     *   Line Feed
+00001084                            79  
+00001084= 57 65 6C 63 6F 6D ...     80  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+000010A5= 46 69 6E 61 6C 20 ...     81                              DC.B    'Final Project for CSS 422',    CR, LF, 0
+000010C1= 50 6C 65 61 73 65 ...     82  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
+000010E2= 50 6C 65 61 73 65 ...     83  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+00001101                            84  
+00001101                            85  
+00001101                            86  * Define Storage
+00001101                            87  *_____________________________________________________________________
+00001102                            88  UserInput   DS.L    1   
+00001106                            89  StartLocData    DS.L    1   
+0000110A                            90      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -85,17 +100,19 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-CAPITALLETTER       1054
-CONVERTASCII        1032
-CONVERTINPUT        1026
+CAPITALLETTER       1074
+CONVERTASCII        1052
+CONVERTINPUT        103A
 CR                  D
 GETINPUT            100C
-ISLETTER            1048
-ISNUMBER            1042
+GOBACK              1050
+ISLETTER            1068
+ISNUMBER            1062
 LF                  A
-MES_END_ADR         10BA
-MES_START_ADR       1099
-MES_WELCOME         105C
-SMALLLETTER         1058
+MES_END_ADR         10E2
+MES_START_ADR       10C1
+MES_WELCOME         1084
+SMALLLETTER         107A
 START               1000
-USERINPUT           10DA
+STARTLOCDATA        1106
+USERINPUT           1102

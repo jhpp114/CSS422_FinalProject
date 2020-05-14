@@ -23,37 +23,51 @@ GetInput
     MOVE.B  #2, D0  
     TRAP    #15 
     
-    CLR.L   D0
-        
+    CLR.L   D2  
+    CLR.L   D3  
+    JSR ConvertInput        
    
+    MOVE.L  D3, StartLocData
+    MOVE.L  StartLocData, A5    
 *   Subroutine
 *_________________________________________________
 ConvertInput        
-       MOVE.B  (A1)+,  D0
+       MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
-       ADDA.L    D0, A2    
-       LSL.B    #4, D0  
+       ADD.L    D2, D3        
+       CMPI.B   #$0,    (A1)    
+       BEQ GoBack
+       *LSL.B    #4, D2     
+       *LSR.B    #4, D2    
+       LSL.L    #4, D3  
+       *ADD.L    D2, D3 
+       BRA  ConvertInput
+GoBack
+        RTS    
        *LSR.B    
 ConvertASCII
         * 30~39 Number
         * 41~46 Cap Letter Till F
         * 61~66 Till f
-        CMPI.B   #$40,   D0 * 40 is immeidate data use CMPI  
+        CMPI.B   #$40,   D2 * 40 is immeidate data use CMPI   
         BLT IsNumber * If less than 40 then execute 
-        CMPI.B  #$41,   D0  * if not compare with 41 (A)    
+        CMPI.B  #$41,   D2  * if not compare with 41 (A)    
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
-        SUB.B   #$30,   D0   
+        SUB.B   #$30,   D2     
         *BRA ConvertASCII    
         RTS 
 IsLetter
         * figure out either small leter or capital letter   
-        CMPI.B  #$46,   D0  * Compare with small letter F         
+        CMPI.B  #$46,   D2  * Compare with small letter F            
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
-        SUB.B   #$37,   D0  
+        SUB.B   #$37,   D2    
+        RTS 
 SmallLetter  
+        SUB.B   #$57,   D2    
+        RTS 
         * tomorrow continue (less than 39) then subtract 30
     SIMHALT             ; halt simulator
 
@@ -72,6 +86,7 @@ Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 * Define Storage
 *_____________________________________________________________________
 UserInput   DS.L    1   
+StartLocData    DS.L    1   
     END    START        ; last line of source
 
 
