@@ -27,12 +27,27 @@ GetInput
     
 *   Subroutine
 *_________________________________________________
+ConvertInput    
+       MOVE.B  (A1)+,  D0   
 ConvertASCII
         * 30~39 Number
         * 41~46 Cap Letter Till F
         * 61~66 Till f
-        MOVE.B  (A1)+,  D0  
-        CMP.B   #$39,   D0  
+        CMPI.B   #$40,   D0 * 40 is immeidate data use CMPI  
+        BLT IsNumber * If less than 40 then execute 
+        CMPI.B  #$41,   D0  * if not compare with 41 (A)    
+        BGE IsLetter    *Bigger than or Equal to 41 then execute    
+IsNumber
+        SUB.B   #$30,   D0   
+        BRA ConvertASCII    
+IsLetter
+        * figure out either small leter or capital letter   
+        CMPI.B  #$46,   D0  * Compare with small letter F         
+        BLE CapitalLetter   * if less or equal to 46 than small letter     
+        BRA SmallLetter     * else go to capital letter 
+CapitalLetter   
+        
+SmallLetter  
         * tomorrow continue (less than 39) then subtract 30
     SIMHALT             ; halt simulator
 
@@ -52,6 +67,7 @@ Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 *_____________________________________________________________________
 UserInput   DS.L    1   
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
