@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/14/2020 4:47:09 PM
+Created On: 5/14/2020 7:09:24 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : 68k   Disassembler    
@@ -67,76 +67,73 @@ Created On: 5/14/2020 4:47:09 PM
 00001076                            63          * 30~39 Number
 00001076                            64          * 41~46 Cap Letter Till F
 00001076                            65          * 61~66 Till f
-00001076  0C02 0040                 66          CMPI.B   #$40,   D2 * 40 is immeidate data use CMPI   
-0000107A  6D00 0012                 67          BLT IsNumber * If less than 40 then execute 
-0000107E  0C02 0040                 68          CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
-00001082  6F00 0038                 69          BLE Input_Error_Handler
-00001086                            70          
-00001086  0C02 0041                 71          CMPI.B  #$41,   D2  * if not compare with 41 (A)    
-0000108A  6C00 0008                 72          BGE IsLetter    *Bigger than or Equal to 41 then execute    
-0000108E                            73  IsNumber
-0000108E                            74          *CMPI.B  #$30,   D2  
-0000108E                            75          *BLT Invalid 
-0000108E  0402 0030                 76          SUB.B   #$30,   D2     
-00001092                            77          *BRA ConvertASCII  
-00001092                            78          *CMP.W  #$0009,    D2  * Compare with 9 should be less or equal to be number      
-00001092                            79          *BGE Invalid   * if Sub is bigger than 9 than invalid    
-00001092  4E75                      80          RTS 
-00001094                            81  IsLetter
-00001094                            82          * figure out either small leter or capital letter   
-00001094  0C02 0046                 83          CMPI.B  #$46,   D2  * Compare with small letter F            
-00001098  6F00 0006                 84          BLE CapitalLetter   * if less or equal to 46 than small letter     
-0000109C  6000 0010                 85          BRA SmallLetter     * else go to capital letter 
-000010A0                            86  CapitalLetter   
-000010A0  0C02 0040                 87          CMPI.B  #$40,   D2  
-000010A4  6F00 0016                 88          BLE Input_Error_Handler 
-000010A8  0402 0037                 89          SUB.B   #$37,   D2   * 46 - 37 = F
-000010AC  4E75                      90          RTS 
-000010AE                            91  SmallLetter  
-000010AE  0C02 0060                 92          CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
-000010B2  6F00 0008                 93          BLE Input_Error_Handler
-000010B6  0402 0057                 94          SUB.B   #$57,   D2    
-000010BA  4E75                      95          RTS 
-000010BC                            96          * tomorrow continue (less than 39) then subtract 30
-000010BC                            97          
-000010BC                            98  Input_Error_Handler
-000010BC  6000 0002                 99          BRA Invalid 
-000010C0                           100          
-000010C0                           101  Invalid 
-000010C0  43F9 0000119B            102          LEA Extra_Space,    A1  
-000010C6  103C 000E                103          MOVE.B  #14,    D0  
-000010CA  4E4F                     104          TRAP    #15 
-000010CC  43F9 0000115F            105          LEA Mes_Invalid, A1 
-000010D2  103C 000E                106          MOVE.B  #14,    D0  
-000010D6  4E4F                     107          TRAP    #15 
-000010D8  103C 0009                108          MOVE.B  #9, D0    
-000010DC  4E4F                     109          TRAP    #15 
-000010DE  FFFF FFFF                110  Finish  SIMHALT             ; halt simulator
-000010E2                           111  
-000010E2                           112  *        RTS 
-000010E2                           113        
-000010E2                           114     
-000010E2                           115  
-000010E2                           116  * Put variables and constants here
-000010E2                           117  * Basic Print Message   
-000010E2                           118  *____________________________________________________________________
-000010E2  =0000000D                119  CR  EQU $0D     *   Carriage Return
-000010E2  =0000000A                120  LF  EQU $0A     *   Line Feed
-000010E2                           121  
-000010E2= 57 65 6C 63 6F 6D ...    122  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
-00001103= 46 69 6E 61 6C 20 ...    123                              DC.B    'Final Project for CSS 422',    CR, LF, 0
-0000111F= 50 6C 65 61 73 65 ...    124  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-00001140= 50 6C 65 61 73 65 ...    125  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
-0000115F                           126  
-0000115F= 54 68 65 20 41 64 ...    127  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-00001184= 54 65 72 6D 69 6E ...    128            DC.B 'Terminating Program.',  CR, LF, 0     
-0000119B= 0D 0A 00                 129  Extra_Space DC.B    CR, LF, 0   
-0000119E                           130  
-0000119E                           131  * Define Storage
-0000119E                           132  *_____________________________________________________________________
-0000119E                           133  UserInput   DS.L    1   
-000011A2                           134  StartLocData    DS.L    1   * store starting address
-000011A6                           135      END    START        ; last line of source
+00001076  0C02 0039                 66          CMPI.B   #$39,   D2 * 40 is immeidate data use CMPI   
+0000107A  6F00 0012                 67          BLE IsNumber * If less than 40 then execute 
+0000107E                            68          *________________________________________________
+0000107E  0C02 0040                 69          CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
+00001082  6F00 0038                 70          BLE Input_Error_Handler
+00001086                            71          *_______________________________________________
+00001086  0C02 0041                 72          CMPI.B  #$41,   D2  * if not compare with 41 (A)    
+0000108A  6C00 0008                 73          BGE IsLetter    *Bigger than or Equal to 41 then execute    
+0000108E                            74  IsNumber
+0000108E  0402 0030                 75          SUB.B   #$30,   D2        
+00001092  4E75                      76          RTS 
+00001094                            77  IsLetter
+00001094                            78          * figure out either small leter or capital letter   
+00001094  0C02 0046                 79          CMPI.B  #$46,   D2  * Compare with small letter F            
+00001098  6F00 0006                 80          BLE CapitalLetter   * if less or equal to 46 than small letter     
+0000109C  6000 0010                 81          BRA SmallLetter     * else go to capital letter 
+000010A0                            82  CapitalLetter   
+000010A0  0C02 0040                 83          CMPI.B  #$40,   D2  
+000010A4  6F00 0016                 84          BLE Input_Error_Handler 
+000010A8  0402 0037                 85          SUB.B   #$37,   D2   * 46 - 37 = F
+000010AC  4E75                      86          RTS 
+000010AE                            87  SmallLetter  
+000010AE  0C02 0060                 88          CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
+000010B2  6F00 0008                 89          BLE Input_Error_Handler
+000010B6  0402 0057                 90          SUB.B   #$57,   D2    
+000010BA  4E75                      91          RTS 
+000010BC                            92          * tomorrow continue (less than 39) then subtract 30
+000010BC                            93          
+000010BC                            94  Input_Error_Handler
+000010BC  6000 0002                 95          BRA Invalid 
+000010C0                            96          
+000010C0                            97  Invalid 
+000010C0  43F9 0000119B             98          LEA Extra_Space,    A1  
+000010C6  103C 000E                 99          MOVE.B  #14,    D0  
+000010CA  4E4F                     100          TRAP    #15 
+000010CC  43F9 0000115F            101          LEA Mes_Invalid, A1 
+000010D2  103C 000E                102          MOVE.B  #14,    D0  
+000010D6  4E4F                     103          TRAP    #15 
+000010D8  103C 0009                104          MOVE.B  #9, D0    
+000010DC  4E4F                     105          TRAP    #15 
+000010DE                           106           
+000010DE  FFFF FFFF                107  Finish  SIMHALT             ; halt simulator
+000010E2                           108  
+000010E2                           109  *        RTS 
+000010E2                           110        
+000010E2                           111     
+000010E2                           112  
+000010E2                           113  * Put variables and constants here
+000010E2                           114  * Basic Print Message   
+000010E2                           115  *____________________________________________________________________
+000010E2  =0000000D                116  CR  EQU $0D     *   Carriage Return
+000010E2  =0000000A                117  LF  EQU $0A     *   Line Feed
+000010E2                           118  
+000010E2= 57 65 6C 63 6F 6D ...    119  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+00001103= 46 69 6E 61 6C 20 ...    120                              DC.B    'Final Project for CSS 422',    CR, LF, 0
+0000111F= 50 6C 65 61 73 65 ...    121  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
+00001140= 50 6C 65 61 73 65 ...    122  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+0000115F                           123  
+0000115F= 54 68 65 20 41 64 ...    124  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
+00001184= 54 65 72 6D 69 6E ...    125            DC.B 'Terminating Program.',  CR, LF, 0     
+0000119B= 0D 0A 00                 126  Extra_Space DC.B    CR, LF, 0   
+0000119E                           127  
+0000119E                           128  * Define Storage
+0000119E                           129  *_____________________________________________________________________
+0000119E                           130  UserInput   DS.L    1   
+000011A2                           131  StartLocData    DS.L    1   * store starting address
+000011A6                           132      END    START        ; last line of source
 
 No errors detected
 No warnings generated

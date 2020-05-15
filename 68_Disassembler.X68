@@ -63,11 +63,12 @@ ConvertASCII
         * 30~39 Number
         * 41~46 Cap Letter Till F
         * 61~66 Till f
-        CMPI.B   #$40,   D2 * 40 is immeidate data use CMPI   
-        BLT IsNumber * If less than 40 then execute 
+        CMPI.B   #$39,   D2 * 40 is immeidate data use CMPI   
+        BLE IsNumber * If less than 40 then execute 
+        *________________________________________________
         CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
         BLE Input_Error_Handler
-        
+        *_______________________________________________
         CMPI.B  #$41,   D2  * if not compare with 41 (A)    
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
@@ -102,7 +103,7 @@ Invalid
         TRAP    #15 
         MOVE.B  #9, D0    
         TRAP    #15 
-        
+         
 Finish  SIMHALT             ; halt simulator
 
 *        RTS 
