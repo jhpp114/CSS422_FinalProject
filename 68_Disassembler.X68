@@ -29,7 +29,7 @@ Get_Input_Start_ADR
     * check if the address is odd then throw error just read right bit  
     *ANDI.B  #1, D3  
     BTST #0,    D3 * is Even?  
-    BNE Invalid * Not even then go to invalid        
+    BNE Invalid_Adr_Not_Even * Not even then go to invalid        
     
     * Store user Input start address to A5
     MOVE.L  D3, StartLocData
@@ -147,6 +147,15 @@ Invalid_Starting_Ending_Adr
         TRAP    #15 
         BRA Get_Input_Start_ADR
          
+Invalid_Adr_Not_Even
+        LEA Extra_Space,    A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        LEA Mes_EvenNumber_Error,   A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        BRA Get_Input_Start_ADR 
+        
 Finish  SIMHALT             ; halt simulator
 
 *        RTS 
@@ -166,7 +175,7 @@ Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 
 Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
           DC.B 'Terminating Program.',  CR, LF, 0    
-Mes_EvenNumber_Error    DC.B    'The Address You provided is not even number',  CR, LF, 0
+Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
   
 
