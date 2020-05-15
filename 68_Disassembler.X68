@@ -22,7 +22,7 @@ GetInputStartADR
     MOVE.B  #14, D0   
     Trap    #15     
     *BRA Invalid 
-    LEA UserInput,  A1  
+    LEA UserInput,  A1  ;   get user input  
     MOVE.B  #2, D0  
     TRAP    #15 
     
@@ -37,22 +37,35 @@ GetInputStartADR
 GetInputEndADR  
     CLR.L   D2  
     CLR.L   D3  
-    LEA Mes_End_Adr,    A1  
-    MOVE.B  #13,    D0  
+    
+    LEA Mes_End_Adr,    A1  ;   ask ending loc  
+    MOVE.B  #14,    D0       
     TRAP    #15 
-  
+    
+    LEA EndLocData, A1  ;   get user input  
+    MOVE.B  #2, D0  
+    Trap    #15 
+    
+    CLR.L   D2  
+    CLR.L   D3  
+    JSR ConvertInput    
+    MOVE.L  D3, EndLocData
+    MOVE.L  EndLocData, A6  
+    
     BRA Finish  
+    
+*_______End of User Input Adr______________________________ 
 *   Subroutine
 *_________________________________________________
 ConvertInput        
        MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
-       ADD.L    D2, D3        
+       ADD.L    D2, D3  * copy D2 to D3       
        CMPI.B   #$0,    (A1)    
        BEQ GoBack
        *LSL.B    #4, D2     
        *LSR.B    #4, D2    
-       LSL.L    #4, D3  
+       LSL.L    #4, D3  * Make room for next byte   
        *ADD.L    D2, D3 
        BRA  ConvertInput
 GoBack
@@ -133,6 +146,8 @@ Extra_Space DC.B    CR, LF, 0
 *_____________________________________________________________________
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
+EndLocData  DS.L    1   *   Store ending address    
+
     END    START        ; last line of source
 
 
