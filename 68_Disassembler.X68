@@ -65,15 +65,13 @@ ConvertASCII
         * 61~66 Till f
         CMPI.B   #$40,   D2 * 40 is immeidate data use CMPI   
         BLT IsNumber * If less than 40 then execute 
+        CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
+        BLE Input_Error_Handler
+        
         CMPI.B  #$41,   D2  * if not compare with 41 (A)    
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
 IsNumber
-        *CMPI.B  #$30,   D2  
-        *BLT Invalid 
-        SUB.B   #$30,   D2     
-        *BRA ConvertASCII  
-        *CMP.W  #$0009,    D2  * Compare with 9 should be less or equal to be number      
-        *BGE Invalid   * if Sub is bigger than 9 than invalid    
+        SUB.B   #$30,   D2        
         RTS 
 IsLetter
         * figure out either small leter or capital letter   
@@ -81,9 +79,13 @@ IsLetter
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
+        CMPI.B  #$40,   D2  
+        BLE Input_Error_Handler 
         SUB.B   #$37,   D2   * 46 - 37 = F
         RTS 
 SmallLetter  
+        CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
+        BLE Input_Error_Handler
         SUB.B   #$57,   D2    
         RTS 
         * tomorrow continue (less than 39) then subtract 30
@@ -100,6 +102,7 @@ Invalid
         TRAP    #15 
         MOVE.B  #9, D0    
         TRAP    #15 
+        
 Finish  SIMHALT             ; halt simulator
 
 *        RTS 
