@@ -59,7 +59,7 @@ Get_Input_End_ADR
     MOVE.L  EndLocData, A6  
     
 *________________________________________________________   
-*   Compare Starting Address and End Address see if it make sense    
+*   Compare Starting Address and End Address see if it make sense       
 Check_Input_Address
     CLR.L   D2  * clr out before use it 
     CLR.L   D3  * clr out before use it 
@@ -79,17 +79,10 @@ ConvertInput
        ADD.L    D2, D3  * copy D2 to D3       
        CMPI.B   #$0,    (A1)    
        BEQ GoBack
-       *LSL.B    #4, D2     
-       *LSR.B    #4, D2    
        LSL.L    #4, D3  * Make room for next byte   
-       *ADD.L    D2, D3 
        BRA  ConvertInput
-GoBack
-        * trying on checking input length
-        *CMP.W   #$0009, D3  
-        *BGE  Input_Error_Handler  
+GoBack  
         RTS    
-       *LSR.B    
 ConvertASCII
         CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
         BLT Input_Error_Handler
@@ -115,17 +108,13 @@ IsLetter
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
-        *CMPI.B  #$40,   D2  
-        *BLE Input_Error_Handler 
         SUB.B   #$37,   D2   * 46 - 37 = F
         RTS 
 SmallLetter  
         CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
         BLE Input_Error_Handler
         SUB.B   #$57,   D2    
-        RTS 
-        * tomorrow continue (less than 39) then subtract 30
-     
+        RTS  
 *_________________________Error Handle___________________________________      
 Input_Error_Handler
         BRA Invalid 
@@ -137,8 +126,6 @@ Invalid
         LEA Mes_Invalid, A1 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        *MOVE.B  #9, D0    
-        *TRAP    #15
         BRA  Get_Input_Start_ADR    
         
 Invalid_Starting_Ending_Adr
@@ -158,12 +145,11 @@ Invalid_Adr_Not_Even
         MOVE.B  #14,    D0  
         TRAP    #15 
         BRA Get_Input_Start_ADR 
-        
-Finish  SIMHALT             ; halt simulator
+    
 
-*        RTS 
-      
-   
+    
+Finish  SIMHALT             ; halt simulator
+        
 
 * Put variables and constants here
 * Basic Print Message   
@@ -176,8 +162,8 @@ Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
 Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
 Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 
-Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-          DC.B 'Terminating Program.',  CR, LF, 0    
+Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0   
+            
 Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
   
