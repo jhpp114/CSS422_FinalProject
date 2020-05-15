@@ -76,12 +76,15 @@ Check_Input_Address
 ConvertInput        
        MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
-       ADD.L    D2, D3  * copy D2 to D3       
+       ADD.L    D2, D3  * copy D2 to D3 
+       ADDA.L   D3, A4      
        CMPI.B   #$0,    (A1)    
        BEQ GoBack
-       LSL.L    #4, D3  * Make room for next byte   
+       LSL.L    #4, D3  * Make room for next byte  
+        
        BRA  ConvertInput
 GoBack  
+        *MOVEA.L D3, A4  
         RTS    
 ConvertASCII
         CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
@@ -159,8 +162,8 @@ LF  EQU $0A     *   Line Feed
 Extra_Space DC.B    CR, LF, 0 
 Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
                             DC.B    'Final Project for CSS 422',    CR, LF, 0
-Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+Mes_Start_Adr       DC.B    'Please Enter Starting Location: $', 0
+Mes_End_Adr     DC.B    'Please Enter Ending Location: $', 0
 
 Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0   
             
@@ -175,6 +178,7 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 
     END    START        ; last line of source
+
 
 
 
