@@ -29,7 +29,7 @@ Get_Input_Start_ADR
     * check if the address is odd then throw error just read right bit  
     *ANDI.B  #1, D3  
     BTST #0,    D3 * is Even?  
-    BNE Invalid_Adr_Not_Even * Not even then go to invalid        
+    BNE Invalid_Adr_Not_Even  * Not even then go to invalid        
     
     * Store user Input start address to A5
     MOVE.L  D3, StartLocData
@@ -51,6 +51,9 @@ Get_Input_End_ADR
     Trap    #15 
  
     JSR ConvertInput    
+    * check if the address is odd then throw error just read right bit 
+    BTST    #0, D3  
+    BNE Invalid_Adr_Not_Even    
     * Store user Input start address to A6  
     MOVE.L  D3, EndLocData
     MOVE.L  EndLocData, A6  
