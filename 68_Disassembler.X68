@@ -14,7 +14,10 @@ START:                  ; first instruction of program
     TRAP    #15 
     
 *_______Get User Input____________________________
-GetInputStartADR    
+GetInputStartADR
+    CLR.L   D2  
+    CLR.L   D3
+   
     LEA Mes_Start_Adr,  A1  ; ask start loc
     MOVE.B  #14, D0   
     Trap    #15     
@@ -64,7 +67,7 @@ ConvertASCII
         * 41~46 Cap Letter Till F
         * 61~66 Till f
         CMPI.B   #$39,   D2 * 40 is immeidate data use CMPI   
-        BLE IsNumber * If less than 40 then execute 
+        BLE IsNumber * If less than 40 then execute  
         *________________________________________________
         CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
         BLE Input_Error_Handler
@@ -80,8 +83,8 @@ IsLetter
         BLE CapitalLetter   * if less or equal to 46 than small letter     
         BRA SmallLetter     * else go to capital letter 
 CapitalLetter   
-        CMPI.B  #$40,   D2  
-        BLE Input_Error_Handler 
+        *CMPI.B  #$40,   D2  
+        *BLE Input_Error_Handler 
         SUB.B   #$37,   D2   * 46 - 37 = F
         RTS 
 SmallLetter  
@@ -101,8 +104,9 @@ Invalid
         LEA Mes_Invalid, A1 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        MOVE.B  #9, D0    
-        TRAP    #15 
+        *MOVE.B  #9, D0    
+        *TRAP    #15
+        BRA  GetInputStartADR    
          
 Finish  SIMHALT             ; halt simulator
 
