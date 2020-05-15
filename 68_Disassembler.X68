@@ -14,27 +14,24 @@ START:                  ; first instruction of program
     TRAP    #15 
     
 *_______Get User Input____________________________
-GetInputStartADR
+Get_Input_Start_ADR
     CLR.L   D2  
     CLR.L   D3
    
     LEA Mes_Start_Adr,  A1  ; ask start loc
     MOVE.B  #14, D0   
     Trap    #15     
-    *BRA Invalid 
     LEA UserInput,  A1  ;   get user input  
     MOVE.B  #2, D0  
     TRAP    #15 
-    
-    CLR.L   D2  
-    CLR.L   D3  
+ 
     JSR ConvertInput        
     * Store user Input start address to A5
     MOVE.L  D3, StartLocData
     MOVE.L  StartLocData, A5  
     
         
-GetInputEndADR  
+Get_Input_End_ADR  
     CLR.L   D2  
     CLR.L   D3  
     
@@ -45,12 +42,21 @@ GetInputEndADR
     LEA EndLocData, A1  ;   get user input  
     MOVE.B  #2, D0  
     Trap    #15 
-    
-    CLR.L   D2  
-    CLR.L   D3  
+ 
     JSR ConvertInput    
+    * Store user Input start address to A6  
     MOVE.L  D3, EndLocData
     MOVE.L  EndLocData, A6  
+    
+*________________________________________________________   
+*   Compare Starting Address and End Address see if it make sense    
+Check_Input_Address
+    CLR.L   D2  * clr out before use it 
+    CLR.L   D3  * clr out before use it 
+    MOVE.L  A5, D2  * move starting adr to d2 to check   
+    MOVE.L  A6, D3  * move ending adr to d3 to check    
+    CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
+    BGE Invalid     
     
     BRA Finish  
     
@@ -69,6 +75,9 @@ ConvertInput
        *ADD.L    D2, D3 
        BRA  ConvertInput
 GoBack
+        * trying on checking input length
+        *CMP.W   #$0009, D3  
+        *BGE  Input_Error_Handler  
         RTS    
        *LSR.B    
 ConvertASCII
@@ -119,7 +128,7 @@ Invalid
         TRAP    #15 
         *MOVE.B  #9, D0    
         *TRAP    #15
-        BRA  GetInputStartADR    
+        BRA  Get_Input_Start_ADR    
          
 Finish  SIMHALT             ; halt simulator
 

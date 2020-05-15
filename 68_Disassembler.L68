@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/14/2020 8:59:29 PM
+Created On: 5/14/2020 10:44:13 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : 68k   Disassembler    
@@ -13,146 +13,157 @@ Created On: 5/14/2020 8:59:29 PM
 00001000                             9  
 00001000                            10  * Put program code here
 00001000                            11  *_______Basic Print Out Welcome Message__________   
-00001000  43F9 000010FE             12      LEA Mes_Welcome,    A1  
+00001000  43F9 00001104             12      LEA Mes_Welcome,    A1  
 00001006  103C 000D                 13      MOVE.B  #13,    D0  
 0000100A  4E4F                      14      TRAP    #15 
 0000100C                            15      
 0000100C                            16  *_______Get User Input____________________________
-0000100C                            17  GetInputStartADR
+0000100C                            17  Get_Input_Start_ADR
 0000100C  4282                      18      CLR.L   D2  
 0000100E  4283                      19      CLR.L   D3
 00001010                            20     
-00001010  43F9 0000113B             21      LEA Mes_Start_Adr,  A1  ; ask start loc
+00001010  43F9 00001141             21      LEA Mes_Start_Adr,  A1  ; ask start loc
 00001016  103C 000E                 22      MOVE.B  #14, D0   
 0000101A  4E4F                      23      Trap    #15     
-0000101C                            24      *BRA Invalid 
-0000101C  43F9 000011BA             25      LEA UserInput,  A1  ;   get user input  
-00001022  103C 0002                 26      MOVE.B  #2, D0  
-00001026  4E4F                      27      TRAP    #15 
-00001028                            28      
-00001028  4282                      29      CLR.L   D2  
-0000102A  4283                      30      CLR.L   D3  
-0000102C  4EB9 00001074             31      JSR ConvertInput        
-00001032                            32      * Store user Input start address to A5
-00001032  23C3 000011BE             33      MOVE.L  D3, StartLocData
-00001038  2A79 000011BE             34      MOVE.L  StartLocData, A5  
-0000103E                            35      
-0000103E                            36          
-0000103E                            37  GetInputEndADR  
-0000103E  4282                      38      CLR.L   D2  
-00001040  4283                      39      CLR.L   D3  
-00001042                            40      
-00001042  43F9 0000115C             41      LEA Mes_End_Adr,    A1  ;   ask ending loc  
-00001048  103C 000E                 42      MOVE.B  #14,    D0       
-0000104C  4E4F                      43      TRAP    #15 
-0000104E                            44      
-0000104E  43F9 000011C2             45      LEA EndLocData, A1  ;   get user input  
-00001054  103C 0002                 46      MOVE.B  #2, D0  
-00001058  4E4F                      47      Trap    #15 
-0000105A                            48      
-0000105A  4282                      49      CLR.L   D2  
-0000105C  4283                      50      CLR.L   D3  
-0000105E  4EB9 00001074             51      JSR ConvertInput    
-00001064  23C3 000011C2             52      MOVE.L  D3, EndLocData
-0000106A  2C79 000011C2             53      MOVE.L  EndLocData, A6  
-00001070                            54      
-00001070  6000 0088                 55      BRA Finish  
-00001074                            56      
-00001074                            57  *_______End of User Input Adr______________________________ 
-00001074                            58  *   Subroutine
-00001074                            59  *_________________________________________________
-00001074                            60  ConvertInput        
-00001074  1419                      61         MOVE.B  (A1)+,  D2   
-00001076  4EB9 0000108C             62         JSR    ConvertASCII
-0000107C  D682                      63         ADD.L    D2, D3  * copy D2 to D3       
-0000107E  0C11 0000                 64         CMPI.B   #$0,    (A1)    
-00001082  6700 0006                 65         BEQ GoBack
-00001086                            66         *LSL.B    #4, D2     
-00001086                            67         *LSR.B    #4, D2    
-00001086  E98B                      68         LSL.L    #4, D3  * Make room for next byte   
-00001088                            69         *ADD.L    D2, D3 
-00001088  60EA                      70         BRA  ConvertInput
-0000108A                            71  GoBack
-0000108A  4E75                      72          RTS    
-0000108C                            73         *LSR.B    
-0000108C                            74  ConvertASCII
-0000108C  0C02 0030                 75          CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
-00001090  6D00 0048                 76          BLT Input_Error_Handler
-00001094  0C02 0067                 77          CMPI.B  #$67,   D2    * Any input that are more or equal to 67 (g) is error 
-00001098  6C00 0040                 78          BGE Input_Error_Handler  
-0000109C                            79          * 30~39 Number
-0000109C                            80          * 41~46 Cap Letter Till F
-0000109C                            81          * 61~66 Till f
-0000109C  0C02 0039                 82          CMPI.B   #$39,   D2 * 40 is immeidate data use CMPI   
-000010A0  6F00 0012                 83          BLE IsNumber * If less than 40 then execute  
-000010A4                            84          *________________________________________________
-000010A4  0C02 0040                 85          CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
-000010A8  6F00 0030                 86          BLE Input_Error_Handler
-000010AC                            87          *_______________________________________________
-000010AC  0C02 0041                 88          CMPI.B  #$41,   D2  * if not compare with 41 (A)    
-000010B0  6C00 0008                 89          BGE IsLetter    *Bigger than or Equal to 41 then execute    
-000010B4                            90  IsNumber
-000010B4  0402 0030                 91          SUB.B   #$30,   D2        
-000010B8  4E75                      92          RTS 
-000010BA                            93  IsLetter
-000010BA                            94          * figure out either small leter or capital letter   
-000010BA  0C02 0046                 95          CMPI.B  #$46,   D2  * Compare with small letter F            
-000010BE  6F00 0006                 96          BLE CapitalLetter   * if less or equal to 46 than small letter     
-000010C2  6000 0008                 97          BRA SmallLetter     * else go to capital letter 
-000010C6                            98  CapitalLetter   
-000010C6                            99          *CMPI.B  #$40,   D2  
-000010C6                           100          *BLE Input_Error_Handler 
-000010C6  0402 0037                101          SUB.B   #$37,   D2   * 46 - 37 = F
-000010CA  4E75                     102          RTS 
-000010CC                           103  SmallLetter  
-000010CC  0C02 0060                104          CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
-000010D0  6F00 0008                105          BLE Input_Error_Handler
-000010D4  0402 0057                106          SUB.B   #$57,   D2    
-000010D8  4E75                     107          RTS 
-000010DA                           108          * tomorrow continue (less than 39) then subtract 30
-000010DA                           109          
-000010DA                           110  Input_Error_Handler
-000010DA  6000 0002                111          BRA Invalid 
-000010DE                           112          
-000010DE                           113  Invalid 
-000010DE  43F9 000011B7            114          LEA Extra_Space,    A1  
-000010E4  103C 000E                115          MOVE.B  #14,    D0  
-000010E8  4E4F                     116          TRAP    #15 
-000010EA  43F9 0000117B            117          LEA Mes_Invalid, A1 
-000010F0  103C 000E                118          MOVE.B  #14,    D0  
-000010F4  4E4F                     119          TRAP    #15 
-000010F6                           120          *MOVE.B  #9, D0    
-000010F6                           121          *TRAP    #15
-000010F6  6000 FF14                122          BRA  GetInputStartADR    
-000010FA                           123           
-000010FA  FFFF FFFF                124  Finish  SIMHALT             ; halt simulator
-000010FE                           125  
-000010FE                           126  *        RTS 
-000010FE                           127        
-000010FE                           128     
-000010FE                           129  
-000010FE                           130  * Put variables and constants here
-000010FE                           131  * Basic Print Message   
-000010FE                           132  *____________________________________________________________________
-000010FE  =0000000D                133  CR  EQU $0D     *   Carriage Return
-000010FE  =0000000A                134  LF  EQU $0A     *   Line Feed
-000010FE                           135  
-000010FE= 57 65 6C 63 6F 6D ...    136  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
-0000111F= 46 69 6E 61 6C 20 ...    137                              DC.B    'Final Project for CSS 422',    CR, LF, 0
-0000113B= 50 6C 65 61 73 65 ...    138  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-0000115C= 50 6C 65 61 73 65 ...    139  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
-0000117B                           140  
-0000117B= 54 68 65 20 41 64 ...    141  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-000011A0= 54 65 72 6D 69 6E ...    142            DC.B 'Terminating Program.',  CR, LF, 0     
-000011B7= 0D 0A 00                 143  Extra_Space DC.B    CR, LF, 0   
-000011BA                           144  
-000011BA                           145  * Define Storage
-000011BA                           146  *_____________________________________________________________________
-000011BA                           147  UserInput   DS.L    1   
-000011BE                           148  StartLocData    DS.L    1   * store starting address
-000011C2                           149  EndLocData  DS.L    1   *   Store ending address    
-000011C6                           150  
-000011C6                           151      END    START        ; last line of source
+0000101C  43F9 000011C0             24      LEA UserInput,  A1  ;   get user input  
+00001022  103C 0002                 25      MOVE.B  #2, D0  
+00001026  4E4F                      26      TRAP    #15 
+00001028                            27   
+00001028  4EB9 0000107A             28      JSR ConvertInput        
+0000102E                            29      * Store user Input start address to A5
+0000102E  23C3 000011C4             30      MOVE.L  D3, StartLocData
+00001034  2A79 000011C4             31      MOVE.L  StartLocData, A5  
+0000103A                            32      
+0000103A                            33          
+0000103A                            34  Get_Input_End_ADR  
+0000103A  4282                      35      CLR.L   D2  
+0000103C  4283                      36      CLR.L   D3  
+0000103E                            37      
+0000103E  43F9 00001162             38      LEA Mes_End_Adr,    A1  ;   ask ending loc  
+00001044  103C 000E                 39      MOVE.B  #14,    D0       
+00001048  4E4F                      40      TRAP    #15 
+0000104A                            41      
+0000104A  43F9 000011C8             42      LEA EndLocData, A1  ;   get user input  
+00001050  103C 0002                 43      MOVE.B  #2, D0  
+00001054  4E4F                      44      Trap    #15 
+00001056                            45   
+00001056  4EB9 0000107A             46      JSR ConvertInput    
+0000105C                            47      * Store user Input start address to A6  
+0000105C  23C3 000011C8             48      MOVE.L  D3, EndLocData
+00001062  2C79 000011C8             49      MOVE.L  EndLocData, A6  
+00001068                            50      
+00001068                            51  *________________________________________________________   
+00001068                            52  *   Compare Starting Address and End Address see if it make sense    
+00001068                            53  Check_Input_Address
+00001068  4282                      54      CLR.L   D2  * clr out before use it 
+0000106A  4283                      55      CLR.L   D3  * clr out before use it 
+0000106C  240D                      56      MOVE.L  A5, D2  * move starting adr to d2 to check   
+0000106E  260E                      57      MOVE.L  A6, D3  * move ending adr to d3 to check    
+00001070                            58      *CMP.L D2, D3    * address same? Error     
+00001070                            59      *BEQ Invalid 
+00001070  B483                      60      CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
+00001072  6C00 0070                 61      BGE Invalid     
+00001076                            62      
+00001076  6000 0088                 63      BRA Finish  
+0000107A                            64      
+0000107A                            65  *_______End of User Input Adr______________________________ 
+0000107A                            66  *   Subroutine
+0000107A                            67  *_________________________________________________
+0000107A                            68  ConvertInput        
+0000107A  1419                      69         MOVE.B  (A1)+,  D2   
+0000107C  4EB9 00001092             70         JSR    ConvertASCII
+00001082  D682                      71         ADD.L    D2, D3  * copy D2 to D3       
+00001084  0C11 0000                 72         CMPI.B   #$0,    (A1)    
+00001088  6700 0006                 73         BEQ GoBack
+0000108C                            74         *LSL.B    #4, D2     
+0000108C                            75         *LSR.B    #4, D2    
+0000108C  E98B                      76         LSL.L    #4, D3  * Make room for next byte   
+0000108E                            77         *ADD.L    D2, D3 
+0000108E  60EA                      78         BRA  ConvertInput
+00001090                            79  GoBack
+00001090                            80          * trying on checking input length
+00001090                            81          *CMP.W   #$0009, D3  
+00001090                            82          *BGE  Input_Error_Handler  
+00001090  4E75                      83          RTS    
+00001092                            84         *LSR.B    
+00001092                            85  ConvertASCII
+00001092  0C02 0030                 86          CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
+00001096  6D00 0048                 87          BLT Input_Error_Handler
+0000109A  0C02 0067                 88          CMPI.B  #$67,   D2    * Any input that are more or equal to 67 (g) is error 
+0000109E  6C00 0040                 89          BGE Input_Error_Handler  
+000010A2                            90          * 30~39 Number
+000010A2                            91          * 41~46 Cap Letter Till F
+000010A2                            92          * 61~66 Till f
+000010A2  0C02 0039                 93          CMPI.B   #$39,   D2 * 40 is immeidate data use CMPI   
+000010A6  6F00 0012                 94          BLE IsNumber * If less than 40 then execute  
+000010AA                            95          *________________________________________________
+000010AA  0C02 0040                 96          CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
+000010AE  6F00 0030                 97          BLE Input_Error_Handler
+000010B2                            98          *_______________________________________________
+000010B2  0C02 0041                 99          CMPI.B  #$41,   D2  * if not compare with 41 (A)    
+000010B6  6C00 0008                100          BGE IsLetter    *Bigger than or Equal to 41 then execute    
+000010BA                           101  IsNumber
+000010BA  0402 0030                102          SUB.B   #$30,   D2        
+000010BE  4E75                     103          RTS 
+000010C0                           104  IsLetter
+000010C0                           105          * figure out either small leter or capital letter   
+000010C0  0C02 0046                106          CMPI.B  #$46,   D2  * Compare with small letter F            
+000010C4  6F00 0006                107          BLE CapitalLetter   * if less or equal to 46 than small letter     
+000010C8  6000 0008                108          BRA SmallLetter     * else go to capital letter 
+000010CC                           109  CapitalLetter   
+000010CC                           110          *CMPI.B  #$40,   D2  
+000010CC                           111          *BLE Input_Error_Handler 
+000010CC  0402 0037                112          SUB.B   #$37,   D2   * 46 - 37 = F
+000010D0  4E75                     113          RTS 
+000010D2                           114  SmallLetter  
+000010D2  0C02 0060                115          CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
+000010D6  6F00 0008                116          BLE Input_Error_Handler
+000010DA  0402 0057                117          SUB.B   #$57,   D2    
+000010DE  4E75                     118          RTS 
+000010E0                           119          * tomorrow continue (less than 39) then subtract 30
+000010E0                           120          
+000010E0                           121  Input_Error_Handler
+000010E0  6000 0002                122          BRA Invalid 
+000010E4                           123          
+000010E4                           124  Invalid 
+000010E4  43F9 000011BD            125          LEA Extra_Space,    A1  
+000010EA  103C 000E                126          MOVE.B  #14,    D0  
+000010EE  4E4F                     127          TRAP    #15 
+000010F0  43F9 00001181            128          LEA Mes_Invalid, A1 
+000010F6  103C 000E                129          MOVE.B  #14,    D0  
+000010FA  4E4F                     130          TRAP    #15 
+000010FC                           131          *MOVE.B  #9, D0    
+000010FC                           132          *TRAP    #15
+000010FC  6000 FF0E                133          BRA  Get_Input_Start_ADR    
+00001100                           134           
+00001100  FFFF FFFF                135  Finish  SIMHALT             ; halt simulator
+00001104                           136  
+00001104                           137  *        RTS 
+00001104                           138        
+00001104                           139     
+00001104                           140  
+00001104                           141  * Put variables and constants here
+00001104                           142  * Basic Print Message   
+00001104                           143  *____________________________________________________________________
+00001104  =0000000D                144  CR  EQU $0D     *   Carriage Return
+00001104  =0000000A                145  LF  EQU $0A     *   Line Feed
+00001104                           146  
+00001104= 57 65 6C 63 6F 6D ...    147  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+00001125= 46 69 6E 61 6C 20 ...    148                              DC.B    'Final Project for CSS 422',    CR, LF, 0
+00001141= 50 6C 65 61 73 65 ...    149  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
+00001162= 50 6C 65 61 73 65 ...    150  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+00001181                           151  
+00001181= 54 68 65 20 41 64 ...    152  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
+000011A6= 54 65 72 6D 69 6E ...    153            DC.B 'Terminating Program.',  CR, LF, 0     
+000011BD= 0D 0A 00                 154  Extra_Space DC.B    CR, LF, 0   
+000011C0                           155  
+000011C0                           156  * Define Storage
+000011C0                           157  *_____________________________________________________________________
+000011C0                           158  UserInput   DS.L    1   
+000011C4                           159  StartLocData    DS.L    1   * store starting address
+000011C8                           160  EndLocData  DS.L    1   *   Store ending address    
+000011CC                           161  
+000011CC                           162      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -161,26 +172,27 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-CAPITALLETTER       10C6
-CONVERTASCII        108C
-CONVERTINPUT        1074
+CAPITALLETTER       10CC
+CHECK_INPUT_ADDRESS  1068
+CONVERTASCII        1092
+CONVERTINPUT        107A
 CR                  D
-ENDLOCDATA          11C2
-EXTRA_SPACE         11B7
-FINISH              10FA
-GETINPUTENDADR      103E
-GETINPUTSTARTADR    100C
-GOBACK              108A
-INPUT_ERROR_HANDLER  10DA
-INVALID             10DE
-ISLETTER            10BA
-ISNUMBER            10B4
+ENDLOCDATA          11C8
+EXTRA_SPACE         11BD
+FINISH              1100
+GET_INPUT_END_ADR   103A
+GET_INPUT_START_ADR  100C
+GOBACK              1090
+INPUT_ERROR_HANDLER  10E0
+INVALID             10E4
+ISLETTER            10C0
+ISNUMBER            10BA
 LF                  A
-MES_END_ADR         115C
-MES_INVALID         117B
-MES_START_ADR       113B
-MES_WELCOME         10FE
-SMALLLETTER         10CC
+MES_END_ADR         1162
+MES_INVALID         1181
+MES_START_ADR       1141
+MES_WELCOME         1104
+SMALLLETTER         10D2
 START               1000
-STARTLOCDATA        11BE
-USERINPUT           11BA
+STARTLOCDATA        11C4
+USERINPUT           11C0
