@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 5/14/2020 10:44:13 PM
+Created On: 5/14/2020 11:28:05 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : 68k   Disassembler    
@@ -13,7 +13,7 @@ Created On: 5/14/2020 10:44:13 PM
 00001000                             9  
 00001000                            10  * Put program code here
 00001000                            11  *_______Basic Print Out Welcome Message__________   
-00001000  43F9 00001104             12      LEA Mes_Welcome,    A1  
+00001000  43F9 00001123             12      LEA Mes_Welcome,    A1  
 00001006  103C 000D                 13      MOVE.B  #13,    D0  
 0000100A  4E4F                      14      TRAP    #15 
 0000100C                            15      
@@ -22,49 +22,49 @@ Created On: 5/14/2020 10:44:13 PM
 0000100C  4282                      18      CLR.L   D2  
 0000100E  4283                      19      CLR.L   D3
 00001010                            20     
-00001010  43F9 00001141             21      LEA Mes_Start_Adr,  A1  ; ask start loc
+00001010  43F9 00001160             21      LEA Mes_Start_Adr,  A1  ; ask start loc
 00001016  103C 000E                 22      MOVE.B  #14, D0   
 0000101A  4E4F                      23      Trap    #15     
-0000101C  43F9 000011C0             24      LEA UserInput,  A1  ;   get user input  
+0000101C  43F9 0000124A             24      LEA UserInput,  A1  ;   get user input  
 00001022  103C 0002                 25      MOVE.B  #2, D0  
 00001026  4E4F                      26      TRAP    #15 
 00001028                            27   
 00001028  4EB9 0000107A             28      JSR ConvertInput        
 0000102E                            29      * Store user Input start address to A5
-0000102E  23C3 000011C4             30      MOVE.L  D3, StartLocData
-00001034  2A79 000011C4             31      MOVE.L  StartLocData, A5  
+0000102E  23C3 0000124E             30      MOVE.L  D3, StartLocData
+00001034  2A79 0000124E             31      MOVE.L  StartLocData, A5  
 0000103A                            32      
-0000103A                            33          
-0000103A                            34  Get_Input_End_ADR  
-0000103A  4282                      35      CLR.L   D2  
-0000103C  4283                      36      CLR.L   D3  
-0000103E                            37      
-0000103E  43F9 00001162             38      LEA Mes_End_Adr,    A1  ;   ask ending loc  
-00001044  103C 000E                 39      MOVE.B  #14,    D0       
-00001048  4E4F                      40      TRAP    #15 
-0000104A                            41      
-0000104A  43F9 000011C8             42      LEA EndLocData, A1  ;   get user input  
-00001050  103C 0002                 43      MOVE.B  #2, D0  
-00001054  4E4F                      44      Trap    #15 
-00001056                            45   
-00001056  4EB9 0000107A             46      JSR ConvertInput    
-0000105C                            47      * Store user Input start address to A6  
-0000105C  23C3 000011C8             48      MOVE.L  D3, EndLocData
-00001062  2C79 000011C8             49      MOVE.L  EndLocData, A6  
-00001068                            50      
-00001068                            51  *________________________________________________________   
-00001068                            52  *   Compare Starting Address and End Address see if it make sense    
-00001068                            53  Check_Input_Address
-00001068  4282                      54      CLR.L   D2  * clr out before use it 
-0000106A  4283                      55      CLR.L   D3  * clr out before use it 
-0000106C  240D                      56      MOVE.L  A5, D2  * move starting adr to d2 to check   
-0000106E  260E                      57      MOVE.L  A6, D3  * move ending adr to d3 to check    
-00001070                            58      *CMP.L D2, D3    * address same? Error     
-00001070                            59      *BEQ Invalid 
+0000103A                            33  *_________Check Start Adr is Even Number__________________
+0000103A                            34  
+0000103A                            35          
+0000103A                            36  Get_Input_End_ADR  
+0000103A  4282                      37      CLR.L   D2  
+0000103C  4283                      38      CLR.L   D3  
+0000103E                            39      
+0000103E  43F9 00001181             40      LEA Mes_End_Adr,    A1  ;   ask ending loc  
+00001044  103C 000E                 41      MOVE.B  #14,    D0       
+00001048  4E4F                      42      TRAP    #15 
+0000104A                            43      
+0000104A  43F9 00001252             44      LEA EndLocData, A1  ;   get user input  
+00001050  103C 0002                 45      MOVE.B  #2, D0  
+00001054  4E4F                      46      Trap    #15 
+00001056                            47   
+00001056  4EB9 0000107A             48      JSR ConvertInput    
+0000105C                            49      * Store user Input start address to A6  
+0000105C  23C3 00001252             50      MOVE.L  D3, EndLocData
+00001062  2C79 00001252             51      MOVE.L  EndLocData, A6  
+00001068                            52      
+00001068                            53  *________________________________________________________   
+00001068                            54  *   Compare Starting Address and End Address see if it make sense    
+00001068                            55  Check_Input_Address
+00001068  4282                      56      CLR.L   D2  * clr out before use it 
+0000106A  4283                      57      CLR.L   D3  * clr out before use it 
+0000106C  240D                      58      MOVE.L  A5, D2  * move starting adr to d2 to check   
+0000106E  260E                      59      MOVE.L  A6, D3  * move ending adr to d3 to check    
 00001070  B483                      60      CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
-00001072  6C00 0070                 61      BGE Invalid     
+00001072  6C00 008C                 61      BGE Invalid_Starting_Ending_Adr
 00001076                            62      
-00001076  6000 0088                 63      BRA Finish  
+00001076  6000 00A4                 63      BRA Finish  
 0000107A                            64      
 0000107A                            65  *_______End of User Input Adr______________________________ 
 0000107A                            66  *   Subroutine
@@ -121,49 +121,61 @@ Created On: 5/14/2020 10:44:13 PM
 000010DA  0402 0057                117          SUB.B   #$57,   D2    
 000010DE  4E75                     118          RTS 
 000010E0                           119          * tomorrow continue (less than 39) then subtract 30
-000010E0                           120          
-000010E0                           121  Input_Error_Handler
-000010E0  6000 0002                122          BRA Invalid 
-000010E4                           123          
-000010E4                           124  Invalid 
-000010E4  43F9 000011BD            125          LEA Extra_Space,    A1  
-000010EA  103C 000E                126          MOVE.B  #14,    D0  
-000010EE  4E4F                     127          TRAP    #15 
-000010F0  43F9 00001181            128          LEA Mes_Invalid, A1 
-000010F6  103C 000E                129          MOVE.B  #14,    D0  
-000010FA  4E4F                     130          TRAP    #15 
-000010FC                           131          *MOVE.B  #9, D0    
-000010FC                           132          *TRAP    #15
-000010FC  6000 FF0E                133          BRA  Get_Input_Start_ADR    
-00001100                           134           
-00001100  FFFF FFFF                135  Finish  SIMHALT             ; halt simulator
-00001104                           136  
-00001104                           137  *        RTS 
-00001104                           138        
-00001104                           139     
-00001104                           140  
-00001104                           141  * Put variables and constants here
-00001104                           142  * Basic Print Message   
-00001104                           143  *____________________________________________________________________
-00001104  =0000000D                144  CR  EQU $0D     *   Carriage Return
-00001104  =0000000A                145  LF  EQU $0A     *   Line Feed
-00001104                           146  
-00001104= 57 65 6C 63 6F 6D ...    147  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
-00001125= 46 69 6E 61 6C 20 ...    148                              DC.B    'Final Project for CSS 422',    CR, LF, 0
-00001141= 50 6C 65 61 73 65 ...    149  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
-00001162= 50 6C 65 61 73 65 ...    150  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
-00001181                           151  
-00001181= 54 68 65 20 41 64 ...    152  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-000011A6= 54 65 72 6D 69 6E ...    153            DC.B 'Terminating Program.',  CR, LF, 0     
-000011BD= 0D 0A 00                 154  Extra_Space DC.B    CR, LF, 0   
-000011C0                           155  
-000011C0                           156  * Define Storage
-000011C0                           157  *_____________________________________________________________________
-000011C0                           158  UserInput   DS.L    1   
-000011C4                           159  StartLocData    DS.L    1   * store starting address
-000011C8                           160  EndLocData  DS.L    1   *   Store ending address    
-000011CC                           161  
-000011CC                           162      END    START        ; last line of source
+000010E0                           120       
+000010E0                           121  *_________________________Error Handle___________________________________      
+000010E0                           122  Input_Error_Handler
+000010E0  6000 0002                123          BRA Invalid 
+000010E4                           124          
+000010E4                           125  Invalid 
+000010E4  43F9 00001120            126          LEA Extra_Space,    A1  
+000010EA  103C 000E                127          MOVE.B  #14,    D0  
+000010EE  4E4F                     128          TRAP    #15 
+000010F0  43F9 000011A0            129          LEA Mes_Invalid, A1 
+000010F6  103C 000E                130          MOVE.B  #14,    D0  
+000010FA  4E4F                     131          TRAP    #15 
+000010FC                           132          *MOVE.B  #9, D0    
+000010FC                           133          *TRAP    #15
+000010FC  6000 FF0E                134          BRA  Get_Input_Start_ADR    
+00001100                           135          
+00001100                           136  Invalid_Starting_Ending_Adr
+00001100  43F9 00001120            137          LEA  Extra_Space,   A1  
+00001106  103C 000E                138          MOVE.B  #14,    D0  
+0000110A  4E4F                     139          TRAP    #15 
+0000110C  43F9 0000120A            140          LEA Mes_Starting_Ending_Adr_Error,  A1  
+00001112  103C 000E                141          MOVE.B  #14,    D0  
+00001116  4E4F                     142          TRAP    #15 
+00001118  6000 FEF2                143          BRA Get_Input_Start_ADR
+0000111C                           144           
+0000111C  FFFF FFFF                145  Finish  SIMHALT             ; halt simulator
+00001120                           146  
+00001120                           147  *        RTS 
+00001120                           148        
+00001120                           149     
+00001120                           150  
+00001120                           151  * Put variables and constants here
+00001120                           152  * Basic Print Message   
+00001120                           153  *____________________________________________________________________
+00001120  =0000000D                154  CR  EQU $0D     *   Carriage Return
+00001120  =0000000A                155  LF  EQU $0A     *   Line Feed
+00001120= 0D 0A 00                 156  Extra_Space DC.B    CR, LF, 0 
+00001123= 57 65 6C 63 6F 6D ...    157  Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+00001144= 46 69 6E 61 6C 20 ...    158                              DC.B    'Final Project for CSS 422',    CR, LF, 0
+00001160= 50 6C 65 61 73 65 ...    159  Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
+00001181= 50 6C 65 61 73 65 ...    160  Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
+000011A0                           161  
+000011A0= 54 68 65 20 41 64 ...    162  Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
+000011C5= 54 65 72 6D 69 6E ...    163            DC.B 'Terminating Program.',  CR, LF, 0    
+000011DC= 54 68 65 20 41 64 ...    164  Mes_EvenNumber_Error    DC.B    'The Address You provided is not even number',  CR, LF, 0
+0000120A= 59 6F 75 72 20 53 ...    165  Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
+00001249                           166    
+00001249                           167  
+00001249                           168  * Define Storage
+00001249                           169  *_____________________________________________________________________
+0000124A                           170  UserInput   DS.L    1   
+0000124E                           171  StartLocData    DS.L    1   * store starting address
+00001252                           172  EndLocData  DS.L    1   *   Store ending address    
+00001256                           173  
+00001256                           174      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -177,22 +189,25 @@ CHECK_INPUT_ADDRESS  1068
 CONVERTASCII        1092
 CONVERTINPUT        107A
 CR                  D
-ENDLOCDATA          11C8
-EXTRA_SPACE         11BD
-FINISH              1100
+ENDLOCDATA          1252
+EXTRA_SPACE         1120
+FINISH              111C
 GET_INPUT_END_ADR   103A
 GET_INPUT_START_ADR  100C
 GOBACK              1090
 INPUT_ERROR_HANDLER  10E0
 INVALID             10E4
+INVALID_STARTING_ENDING_ADR  1100
 ISLETTER            10C0
 ISNUMBER            10BA
 LF                  A
-MES_END_ADR         1162
-MES_INVALID         1181
-MES_START_ADR       1141
-MES_WELCOME         1104
+MES_END_ADR         1181
+MES_EVENNUMBER_ERROR  11DC
+MES_INVALID         11A0
+MES_STARTING_ENDING_ADR_ERROR  120A
+MES_START_ADR       1160
+MES_WELCOME         1123
 SMALLLETTER         10D2
 START               1000
-STARTLOCDATA        11C4
-USERINPUT           11C0
+STARTLOCDATA        124E
+USERINPUT           124A

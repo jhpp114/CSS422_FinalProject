@@ -30,6 +30,8 @@ Get_Input_Start_ADR
     MOVE.L  D3, StartLocData
     MOVE.L  StartLocData, A5  
     
+*_________Check Start Adr is Even Number__________________
+
         
 Get_Input_End_ADR  
     CLR.L   D2  
@@ -56,7 +58,7 @@ Check_Input_Address
     MOVE.L  A5, D2  * move starting adr to d2 to check   
     MOVE.L  A6, D3  * move ending adr to d3 to check    
     CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
-    BGE Invalid     
+    BGE Invalid_Starting_Ending_Adr
     
     BRA Finish  
     
@@ -115,7 +117,8 @@ SmallLetter
         SUB.B   #$57,   D2    
         RTS 
         * tomorrow continue (less than 39) then subtract 30
-        
+     
+*_________________________Error Handle___________________________________      
 Input_Error_Handler
         BRA Invalid 
         
@@ -129,6 +132,15 @@ Invalid
         *MOVE.B  #9, D0    
         *TRAP    #15
         BRA  Get_Input_Start_ADR    
+        
+Invalid_Starting_Ending_Adr
+        LEA  Extra_Space,   A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        LEA Mes_Starting_Ending_Adr_Error,  A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        BRA Get_Input_Start_ADR
          
 Finish  SIMHALT             ; halt simulator
 
@@ -141,15 +153,17 @@ Finish  SIMHALT             ; halt simulator
 *____________________________________________________________________
 CR  EQU $0D     *   Carriage Return
 LF  EQU $0A     *   Line Feed
-
+Extra_Space DC.B    CR, LF, 0 
 Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
                             DC.B    'Final Project for CSS 422',    CR, LF, 0
 Mes_Start_Adr       DC.B    'Please Enter Starting Location: ', 0
 Mes_End_Adr     DC.B    'Please Enter Ending Location: ', 0
 
 Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF
-          DC.B 'Terminating Program.',  CR, LF, 0     
-Extra_Space DC.B    CR, LF, 0   
+          DC.B 'Terminating Program.',  CR, LF, 0    
+Mes_EvenNumber_Error    DC.B    'The Address You provided is not even number',  CR, LF, 0
+Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
+  
 
 * Define Storage
 *_____________________________________________________________________
