@@ -73,6 +73,99 @@ Check_Input_Address
     BRA Finish  
     
 *_______End of User Input Adr______________________________ 
+
+*_______Start of reading machine code______________________
+
+Disassemble                     * while A5 is less than A6
+        MOVE.L A5, D0
+        CMP.L A6, D0
+        BGE OUTPUT_RESULT
+        
+        MOVE.B (A5), D1        * read a byte from from A5, store to D1. This contains opcode
+        
+        *valid opcode bits cases: 10-EF
+        CMP.B #$10, D1     
+        BLT    INVALID_OPCODE   * invalid, need to move on to the next word
+        
+        CMP.B  #$3F, D1          * 0001 - 0011 -> -> 10 - 3F -> MOVE, MOVEA            * 
+        BLE    _MOVE_MOVEA
+        
+        CMP.B  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
+        BLE _MOVEM_LEA_JSR_RTS
+        
+        CMP.B #$5F, D1           * 0110 -> 50 - 5F -> BCC
+        BLE _BCC
+        
+        CMP.B #$80, D1           * 60 - 7F invalid
+        BLT    INVALID_OPCODE    * invalid, need to move on to the next word
+
+        
+        CMP.B #$8F, D1           * 1000 -> 80 - 8F -> OR
+        BLE _OR
+        
+        CMP.B #$9F, D1           * 1001 -> 90 - 9F -> SUB
+        BLE _SUB
+        
+        CMP.B #$B0, D1           * A0 - AF invalid
+        BLT    INVALID_OPCODE    * invalid, need to move on to the next word
+
+        CMP.B #$BF, D1           * 1011 -> B0 - BF -> CMP
+        BLE _CMP
+        
+        CMP.B #$CF, D1           * 1100 -> C0- CF -> AND
+        BLE _AND
+        
+        CMP.B #$DF, D1           * 1101 -> D0 - DF -> ADD
+        BLE _ADD
+        
+        CMP.B #$EF, D1           * 1110 -> E0 - EF -> LSL, ASR
+        BLE _LSL_ASR
+        
+        BRA INVALID_OPCODE
+        
+INVALID_OPCODE                   * skip to the next word
+        
+        ADDA #$2, A5
+        BRA Disassemble 
+        
+* for all below methods,      
+
+*___________________________________________________________________________________
+* start of get EA
+* precondition: A5 points to the first byte of the current machine code, D1 contains the first byte of the command      
+*_____________________________________________________________________________________  
+_MOVE_MOVEA
+    LSL   #8, D1 
+    ADDA, #1, A5
+    MOVE.B (A5)+, D1            * full opcode word in D1
+    MOVE.W  D1, D2              * copy D1 to D2
+    LSL   #7, D2                
+    LSR   #13, D2               * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+    
+    
+                      
+    CMP.B #$1F                  * size Byte
+    BLE   _MOVE_MOVEA_B
+      
+    CMP.B #$2F                  *size Word
+    BLE   _MOVE_MOVEA_W
+    
+    CMP.B #$2F                  *size Longword
+    BLE   _MOVE_MOVEA_L
+    
+    
+_MOVEM_LEA_JSR_RTS
+_BCC
+_OR
+_SUB
+_CMP
+_AND
+_ADD
+_LSL_ASR
+*------------------------------------------------
+* start to print final result
+*------------------------------------------------
+OUTPUT_RESULT
 *   Subroutine
 *_________________________________________________
 ConvertInput        
