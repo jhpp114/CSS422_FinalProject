@@ -68,6 +68,8 @@ Check_Input_Address
     CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
     BGE Invalid_Starting_Ending_Adr
     
+    CLR.L   D2 
+    CLR.L   D3  
     BRA Finish  
     
 *_______End of User Input Adr______________________________ 
@@ -77,7 +79,7 @@ ConvertInput
        MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
        ADD.L    D2, D3  * copy D2 to D3 
-       ADDA.L   D3, A4      
+       *ADDA.L   D3, A4      
        CMPI.B   #$0,    (A1)    
        BEQ GoBack
        LSL.L    #4, D3  * Make room for next byte  
@@ -178,6 +180,7 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 
     END    START        ; last line of source
+
 
 
 
