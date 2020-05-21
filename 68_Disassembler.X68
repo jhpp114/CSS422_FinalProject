@@ -177,19 +177,18 @@ _BXX
     BEQ _BLE    
     CMP.W   #$E,    D6  
     BEQ _BGT     
-        CMP.W   #$4,    D6  
-        BEQ _BCC
+    CMP.W   #$4,    D6  
+    BEQ _BCC
         
         
 _BCC
-        LEA BCC_Print,  A1  
-        MOVE.B  #14,    D0  
-        TRAP    #15 
+    LEA BCC_Print,  A1  
+    MOVE.B  #14,    D0  
+    TRAP    #15 
 _BLE
     
 _BGT
 
-*___________________END OF B brothers__________________________ 
 _OR
 _SUB
 _CMP
@@ -302,7 +301,7 @@ Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equa
 *_______________________________________________________________________________
 * Variables to check if it goes to correct area
 Move_Print  DC.B    'MOVE', 0   
-
+BCC_Print   DC.B    'BCC',  0   
 
 * Define Storage
 *_____________________________________________________________________
