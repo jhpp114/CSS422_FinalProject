@@ -165,21 +165,22 @@ _MOVE_MOVEA
 _MOVEM_LEA_JSR_RTS
 *____________________BCC BLE BGT____________________________    
 _BXX    
+* clear out before use
     CLR.L   D0  
-    CLR.L   D2  * clear out before use
+    CLR.L   D2      
     CLR.L   D3  
-    CLR.L   D6  * clear out before use
-    MOVE.W  (A5),   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x    
-    MOVE.W  D2, D6  * D6 now has same value as D2   
-    ROL.W   #4, D6  *  shift D6 value   
-    MOVE.W  D6, D2  *  Move shifted value to D2 
-    ANDI.W  #$000F, D6  
+    CLR.L   D6  
+    CLR.L   D7  
+* clear out before use
+    MOVE.B  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x   
+    MOVE.B  D2, D6  
+    CMP.B   #$64,   D6    
+    BEQ _BCC    
+    CMP.B   #$6E,   D6  
+    BEQ _BGT    
+    CMP.B   #$6F,   D6  
     BEQ _BLE    
-    CMP.W   #$E,    D6  
-    BEQ _BGT     
-    CMP.W   #$4,    D6  
-    BEQ _BCC
-        
+    BRA INVALID_OPCODE  * Skip to the nex word
         
 _BCC
     LEA BCC_Print,  A1  
@@ -201,6 +202,8 @@ _LSL_ASR
 OUTPUT_RESULT
 *   Subroutine
 *_________________________________________________
+
+
 ConvertInput        
        MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
