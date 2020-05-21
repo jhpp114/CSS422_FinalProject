@@ -68,9 +68,17 @@ Check_Input_Address
     CMP.L   D3, D2  * end address is not bigger than starting addr and address same? Error  
     BGE Invalid_Starting_Ending_Adr
     
+    *___________Clear All Unnecessary register____________________________  
     CLR.L   D2 
     CLR.L   D3  
-    BRA Finish  
+    CLR.L   D0  *  clear d0 before use it in disassemble
+    CLR.L   D1  
+    MOVE.L  #$00000000, A1  
+    MOVE.L  #$00000000, A2    
+    MOVE.L  #$00000000, A3    
+    MOVE.L  #$00000000, A4    
+    
+    *BRA Finish  
     
 *_______End of User Input Adr______________________________ 
 
@@ -93,8 +101,8 @@ Disassemble                     * while A5 is less than A6
         CMP.B  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
         BLE _MOVEM_LEA_JSR_RTS
         
-        CMP.B #$5F, D1           * 0110 -> 50 - 5F -> BCC
-        BLE _BCC
+        CMP.B #$6F, D1           * 0110 -> 50 - 5F -> BCC   
+        BLE _BXX  
         
         CMP.B #$80, D1           * 60 - 7F invalid
         BLT    INVALID_OPCODE    * invalid, need to move on to the next word
@@ -136,26 +144,52 @@ INVALID_OPCODE                   * skip to the next word
 *_____________________________________________________________________________________  
 _MOVE_MOVEA
     LSL   #8, D1 
-    ADDA, #1, A5
+    ADDA #1, A5
     MOVE.B (A5)+, D1            * full opcode word in D1
     MOVE.W  D1, D2              * copy D1 to D2
     LSL   #7, D2                
-    LSR   #13, D2               * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+    *LSR   #13, D2               * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
     
     
                       
-    CMP.B #$1F                  * size Byte
-    BLE   _MOVE_MOVEA_B
+    *CMP.B #$1F                  * size Byte
+    *BLE   _MOVE_MOVEA_B
       
-    CMP.B #$2F                  *size Word
-    BLE   _MOVE_MOVEA_W
+    *CMP.B #$2F                  *size Word
+    *BLE   _MOVE_MOVEA_W
     
-    CMP.B #$2F                  *size Longword
-    BLE   _MOVE_MOVEA_L
+    *CMP.B #$2F                  *size Longword
+    *BLE   _MOVE_MOVEA_L
     
     
 _MOVEM_LEA_JSR_RTS
+*____________________BCC BLE BGT____________________________    
+_BXX    
+    CLR.L   D0  
+    CLR.L   D2  * clear out before use
+    CLR.L   D3  
+    CLR.L   D6  * clear out before use
+    MOVE.W  (A5),   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x    
+    MOVE.W  D2, D6  * D6 now has same value as D2   
+    ROL.W   #4, D6  *  shift D6 value   
+    MOVE.W  D6, D2  *  Move shifted value to D2 
+    ANDI.W  #$000F, D6  
+    BEQ _BLE    
+    CMP.W   #$E,    D6  
+    BEQ _BGT     
+        CMP.W   #$4,    D6  
+        BEQ _BCC
+        
+        
 _BCC
+        LEA BCC_Print,  A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+_BLE
+    
+_BGT
+
+*___________________END OF B brothers__________________________ 
 _OR
 _SUB
 _CMP
@@ -265,6 +299,10 @@ Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0
 Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
   
+*_______________________________________________________________________________
+* Variables to check if it goes to correct area
+Move_Print  DC.B    'MOVE', 0   
+
 
 * Define Storage
 *_____________________________________________________________________
@@ -273,6 +311,8 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 
     END    START        ; last line of source
+
+
 
 
 
