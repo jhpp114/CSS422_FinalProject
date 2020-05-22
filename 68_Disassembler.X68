@@ -152,7 +152,7 @@ _MOVE_MOVEA
     MOVE.B (A5)+, D1            * full opcode word in D1
     MOVE.W  D1, D2              * copy D1 to D2, for dest mode
     MOVE.W  D1, D3              * copy D1 to D3, for dest register
-    MOVE.W  D1, D4              * copy D1 to D2, for src mode
+    MOVE.W  D1, D4              * copy D1 to D4, for src mode
     MOVE.W  D1, D5              * copy D1 to D5, for src register
   
     LSL   #7,  D2   
@@ -174,6 +174,8 @@ _MOVE_MOVEA
     LSR   #8,  D5              * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
     
 _MOVE_MOVEA_OUTPUT              * condition: D1 contains size (0000 0000 0000 00xx), D2 contains Dest mode, D3 contains dest register, D4 contains src mode, D5 contains src register    
+    CMP.B #1,   D2
+    BEQ   INVALID_OPCODE
     
     CMP.B #1,   D2
     BEQ   _MOVEA_OUTPUT
@@ -201,20 +203,124 @@ _MOVE_MOVEA_SIZE
     
 _MOVE_MOVEA_SRC 
     
-    CMP.B D5, #$000
-    BSR PRINT_DATA_REG 
-       
-    CMP.B D5, #$001
-    BSR PRINT_ADDRESS_REG
-
-    CMP.B D5, #$010
-    BSR PRINT_PAREN_ADDRESS_REG
     
-    CMP.B D5, #$011
-    BSR PRINT_INCRE_ADDRESS_REG
+    CMP.B D4, #$000
+    BEQ M_PRINT_DATA_REG 
+       
+    CMP.B D4, #$001
+    BEQ M_PRINT_ADDRESS_REG
 
-    CMP.B D5, #$100
-    BSR PRINT_DECRE_ADDRESS_REG
+    CMP.B D4, #$010
+    BEQ M_PRINT_PAREN_ADDRESS_REG
+    
+    CMP.B D4, #$011
+    BEQ M_PRINT_INCRE_ADDRESS_REG
+
+    CMP.B D4, #$100
+    BEQ M_PRINT_DECRE_ADDRESS_REG
+    
+    CMP.B D4, #$111
+    BEQ M_PRINT_ABSOLUTE_IMMEDIATE_DATA
+    
+    BRA INVALD_OPCODE
+
+M_PRINT_DATA_REG
+    JSR PRINT_DATA_REG
+    BRA _MOVE_MOVEA_DEST
+
+M_PRINT_ADDRESS_REG
+    JSR PRINT_ADDRESS_REG
+    BRA _MOVE_MOVEA_DEST
+    
+M_PRINT_PAREN_ADDRESS_REG
+    JSR PRINT_PAREN_ADDRESS_REG
+    BRA _MOVE_MOVEA_DEST
+    
+M_PRINT_INCRE_ADDRESS_REG
+    JSR PRINT_PAREN_ADDRESS_REG
+    BRA _MOVE_MOVEA_DEST
+    
+M_PRINT_DECRE_ADDRESS_REG
+    JSR PRINT_PAREN_ADDRESS_REG
+    BRA _MOVE_MOVEA_DEST    
+                    
+* D5 contains the register number    
+PRINT_DATA_REG
+    CMP.B   D5, 7           * check n > 7
+    BGT     INVALID_OPCODE
+    
+    LEA D,  A1              * print "D"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+    MOVE.B  D5,  D1         *print register number
+    ADD.B   #$30, D1  
+    MOVE.B  #6, D0   
+    Trap    #15 
+    RTS
+    
+PRINT_ADDRESS_REG
+    CMP.B   D5, 7           * check n > 7
+    BGT     INVALID_OPCODE
+    
+    LEA A,  A1              * print "A"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+    MOVE.B  D5,  D1         *print register number
+    ADD.B   #$30, D1  
+    MOVE.B  #6, D0   
+    Trap    #15 
+    RTS
+
+PRINT_PAREN_ADDRESS_REG
+    CMP.B   D5, 7           * check n > 7
+    BGT     INVALID_OPCODE
+        
+    LEA OPEN_BRACKET,  A1              * print "("     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    
+    LEA A,  A1              * print "A"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    
+    LEA OPEN_BRACKET,  A1              * print ")"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+    MOVE.B  D5,  D1         *print register number
+    ADD.B   #$30, D1  
+    MOVE.B  #6, D0   
+    Trap    #15 
+    RTS
+
+PRINT_INCRE_ADDRESS_REG
+    CMP.B   D5, 7           * check n > 7
+    BGT     INVALID_OPCODE
+        
+    LEA OPEN_BRACKET,  A1              * print "("     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    
+    LEA A,  A1                         * print "A"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    
+    LEA OPEN_BRACKET,  A1              * print ")"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    
+    LEA OPEN_BRACKET,  A1              * print "+"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+    MOVE.B  D5,  D1         *print register number
+    ADD.B   #$30, D1  
+    MOVE.B  #6, D0   
+    Trap    #15 
+    RTS
+        
 _MOVE_MOVEA_DEST      
                   
     *CMP.B #$1F                  * size Byte
@@ -550,6 +656,7 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
