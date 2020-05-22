@@ -150,12 +150,73 @@ _MOVE_MOVEA
     LSL   #8, D1 
     ADDA #1, A5
     MOVE.B (A5)+, D1            * full opcode word in D1
-    MOVE.W  D1, D2              * copy D1 to D2
-    LSL   #7, D2                
-    *LSR   #13, D2               * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+    MOVE.W  D1, D2              * copy D1 to D2, for dest mode
+    MOVE.W  D1, D3              * copy D1 to D3, for dest register
+    MOVE.W  D1, D4              * copy D1 to D2, for src mode
+    MOVE.W  D1, D5              * copy D1 to D5, for src register
+  
+    LSL   #7,  D2   
+    LSR   #8,  D2                     
+    LSR   #5,  D2              * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+
+    LSL   #4,  D3              
+    LSR   #8,  D3                     
+    LSR   #5,  D3             * now D3 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest register
     
+    LSL   #8,  D4 
+    LSL   #2,  D4             
+    LSR   #8,  D4                     
+    LSR   #5,  D4              * now D4 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src mode
     
-                      
+    LSL   #8,  D5  
+    LSL   #5,  D5
+    LSR   #8,  D5               
+    LSR   #8,  D5              * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
+    
+_MOVE_MOVEA_OUTPUT              * condition: D1 contains size (0000 0000 0000 00xx), D2 contains Dest mode, D3 contains dest register, D4 contains src mode, D5 contains src register    
+    
+    CMP.B #1,   D2
+    BEQ   _MOVEA_OUTPUT
+    
+_MOVE_OUTPUT    
+    LEA MOVE_VALUE,  A1         * print "MOVE"    
+    MOVE.B  #14, D0   
+    Trap    #15    
+   
+    BRA _MOVE_MOVEA_SIZE
+    
+_MOVEA_OUTPUT    
+        
+    LEA MOVEA_VALUE,  A1        * print "MOVEA"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+_MOVE_MOVEA_SIZE
+    LEA _MOVE_MOVEA_SRC, A0
+    CMP.B   #3, D1
+    BEQ     PRINTWORD
+    CMP.B   #2, D1
+    BEQ     PRINTLONGWORD
+    JMP     PRINTBYTE
+    
+_MOVE_MOVEA_SRC 
+    
+    CMP.B D5, #$000
+    BSR PRINT_DATA_REG 
+       
+    CMP.B D5, #$001
+    BSR PRINT_ADDRESS_REG
+
+    CMP.B D5, #$010
+    BSR PRINT_PAREN_ADDRESS_REG
+    
+    CMP.B D5, #$011
+    BSR PRINT_INCRE_ADDRESS_REG
+
+    CMP.B D5, #$100
+    BSR PRINT_DECRE_ADDRESS_REG
+_MOVE_MOVEA_DEST      
+                  
     *CMP.B #$1F                  * size Byte
     *BLE   _MOVE_MOVEA_B
       
@@ -288,7 +349,6 @@ Next_HEX
     CLR.L   D1  
     BRA Convert_Hex_to_Ascii
 
-
 ConvertInput        
        MOVE.B  (A1)+,  D2   
        JSR    ConvertASCII
@@ -333,7 +393,27 @@ SmallLetter
         CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
         BLE Input_Error_Handler
         SUB.B   #$57,   D2    
-        RTS  
+        RTS
+PRINTBYTE
+    LEA MOVEA_VALUE,  A1        * print ".B"     
+    MOVE.B  #14, D0   
+    Trap    #15
+    JMP     (A0)    
+PRINTWORD
+    LEA MOVEA_VALUE,  A1        * print ".W"     
+    MOVE.B  #14, D0   
+    Trap    #15
+    JMP     (A0)
+
+
+PRINTLONGWORD
+    LEA MOVEA_VALUE,  A1        * print ".L"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+    JMP     (A0)
+    
+
+  
 *_________________________Error Handle___________________________________      
 Input_Error_Handler
         BRA Invalid 
@@ -385,7 +465,79 @@ Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0
             
 Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
-  
+
+RTS_VALUE               DC.W        'RTS',0     * Requested
+JSR_VALUE               DC.W        'JSR',0     * Requested
+LEA_VALUE               DC.W        'LEA',0     * Requested
+NEG_VALUE               DC.W        'NEG',0     * Requested
+CMPI_VALUE              DC.W        'CMPI',0    * Requested
+CMP_VALUE               DC.W        'CMP',0     * Requested
+SUB_VALUE               DC.W        'SUB',0     * Requested
+SUBQ_VALUE              DC.W        'SUBQ',0    * Requested
+DIVS_VALUE              DC.W        'DIVS',0    * Requested
+BRA_VALUE               DC.W        'BRA',0     * Requested
+MULS_VALUE              DC.W        'MULS',0    * Requested
+ADD_VALUE               DC.W        'ADD',0     * Requested
+ADDA_VALUE              DC.W        'ADDA',0    * Requested
+AS_VALUE                DC.W        'AS',0      * Requested ASR, ASL
+LS_VALUE                DC.W        'LS',0      * Requested LSR, LSL
+RO_VALUE                DC.W        'RO',0      * Requested ROR, ROL
+BCLR_VALUE              DC.W        'BCLR',0    * Unfinished
+LEFT_DIRECTION          DC.W        'L',0
+RIGHT_DIRECTION         DC.W        'R',0
+OR_VALUE                DC.W        'OR',0      * Extra
+MOVEA_VALUE             DC.W        'MOVEA',0   * Requested
+MOVE_VALUE              DC.W        'MOVE',0    * Requested
+MOVEQ_VALUE             DC.W        'MOVEQ',0   * Extra
+DATA_VALUE              DC.W        'DATA',0
+HIGHER_VALUE            DC.W        'HI',0
+LOWER_OR_SAME_VALUE     DC.W        'LS',0
+CARRY_CLEAR_VALUE       DC.W        'CC',0
+NOT_EQUAL_VALUE         DC.W        'NE',0
+EQUAL_VALUE             DC.W        'EQ',0
+OVERFLOW_CLEAR_VALUE    DC.W        'VC',0 *
+OVERFLOW_SET_VALUE      DC.W        'VS',0
+PLUS_VALUE              DC.W        'PL',0
+MINUS_VALUE             DC.W        'MI',0
+GREATER_OR_EQUAL_VALUE  DC.W        'GE',0 *
+LESS_THAN_VALUE         DC.W        'LT',0 *
+GREATER_THAN_VALUE      DC.W        'GT',0
+LESS_OR_EQUAL_VALUE     DC.W        'LE',0
+CARRY_SET_VALUE         DC.W        'CS',0 *
+SR_VALUE                DC.W        'SR',0
+CCR_VALUE               DC.W        'CCR',0
+OPENING_BRACKET         DC.W        '(',0
+CLOSING_BRACKET         DC.W        ')',0
+PLUS_SIGN               DC.W        '+',0
+MINUS_SIGN              DC.W        '-',0
+DATA_REGISTER           DC.W        'D',0
+ADDRESS_REGISTER        DC.W        'A',0
+COMMA                   DC.W        ',',0
+SPACE                   DC.W        ' ',0
+BINARY_SYMBOL           DC.W        '%',0
+HEX_SYMBOL              DC.W        '$',0
+IMMEDIATE_DATA_SYMBOL   DC.W        '#',0
+BYTE_SUFFIX             DC.W        '.B',0
+WORD_SUFFIX             DC.W        '.W',0
+LONG_SUFFIX             DC.W        '.L',0
+ZERO                    DC.W        '0',0
+ONE                     DC.W        '1',0
+TWO                     DC.W        '2',0
+THREE                   DC.W        '3',0
+FOUR                    DC.W        '4',0
+FIVE                    DC.W        '5',0
+SIX                     DC.W        '6',0
+SEVEN                   DC.W        '7',0
+EIGHT                   DC.W        '8',0
+NINE                    DC.W        '9',0
+A                       DC.W        'A',0
+B                       DC.W        'B',0
+C                       DC.W        'C',0
+D                       DC.W        'D',0
+E                       DC.W        'E',0
+F                       DC.W        'F',0
+
+   
 *_______________________________________________________________________________
 * Variables to check if it goes to correct area
 Move_Print  DC.B    'MOVE', 0   
