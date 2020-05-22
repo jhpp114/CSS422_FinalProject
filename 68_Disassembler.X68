@@ -82,6 +82,10 @@ Check_Input_Address
     
 *_______End of User Input Adr______________________________ 
 
+    JSR Print_Cur_Addr
+    LEA ProgramEnd, A2  * A2    store   program end 
+    JSR Disassemble
+
 *_______Start of reading machine code______________________
 
 Disassemble                     * while A5 is less than A6
@@ -101,7 +105,7 @@ Disassemble                     * while A5 is less than A6
         CMP.B  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
         BLE _MOVEM_LEA_JSR_RTS
         
-        CMP.B #$6F, D1           * 0110 -> 50 - 5F -> BCC   
+        CMP.B #$6F, D1           * 0110 -> 50 - 5F -> BCC (note it should not be 5F)
         BLE _BXX  
         
         CMP.B #$80, D1           * 60 - 7F invalid
@@ -169,27 +173,65 @@ _BXX
     CLR.L   D0  
     CLR.L   D2      
     CLR.L   D3  
+    CLR.L   D5  
     CLR.L   D6  
     CLR.L   D7  
 * clear out before use
-    MOVE.B  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x   
-    MOVE.B  D2, D6  
-    CMP.B   #$64,   D6    
-    BEQ _BCC    
-    CMP.B   #$6E,   D6  
-    BEQ _BGT    
-    CMP.B   #$6F,   D6  
-    BEQ _BLE    
-    BRA INVALID_OPCODE  * Skip to the nex word
+    MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
+    MOVE.W  D2, D6    
+    ROL.W   #4, D6  
+    *ANDI.W  #$000F, D6  
+    *MULU    #8, D6  
+    
+    MOVE.W  D6, D5    
+    ROL.W   #4, D6  
+    MOVE.W  D6, D5  
+    ANDI.W  #$000F, D6  
+    CMP.W   #$F,    D6         
+    BEQ _BLE
+    CMP.W   #$E,    D6  
+    BEQ _BGT
+    CMP.W   #$4,    D6  
+    BEQ _BCC
+    BRA INVALID_OPCODE
         
 _BCC
-    LEA BCC_Print,  A1  
-    MOVE.B  #14,    D0  
-    TRAP    #15 
+    MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program  
+    MOVE.B  #'C',   (A2)+   
+    MOVE.B  #'C',   (A2)+  
+    MOVE.B  #' ',   (A2)+   * little space
+    MOVE.B  #' ',   (A2)+   * little space
+    BRA BXX_Displacement 
+ 
+    
 _BLE
     
 _BGT
 
+BXX_Displacement    
+    MOVE.W  D2, D6  *   Load full memory 
+    MOVE.L  A5, D5  *   Load current starting adr from user
+    MOVE.B  #0, D1  *   set up counter 0 to 8   
+    MOVE.B  #8, D2  
+    ANDI.W  #$00FF, D6  *   00XX
+    CMP.W   #$00,   D6  *   if 00 then it should be 8bit displacement   
+    BEQ BXX_DISPLACEMENT_WORD      
+    CMP.W   #$FF,   D6  *   if  FF then it should be 16 bits displacement   
+    BEQ BXX_DISPLACEMENT_LONG   
+    BRA BXX_DISPLACEMENT_8Bit   *   rest of them are 8 bit  
+  
+   
+BXX_DISPLACEMENT_8Bit
+    MOVE.W  D2, D6  *   Load full memory    
+    BRA Finish  *   End for now 
+
+BXX_DISPLACEMENT_WORD
+
+BXX_DISPLACEMENT_LONG   
+
+
+
+*___________________END OF B brothers__________________________ 
 _OR
 _SUB
 _CMP
@@ -202,6 +244,49 @@ _LSL_ASR
 OUTPUT_RESULT
 *   Subroutine
 *_________________________________________________
+*_______PRINT CURRENT ADDRESS______________________________ 
+Print_Cur_Addr
+    MOVE.L  A5, D2 * move staring addr to d2
+    MOVE.B  #0, D5  * counter to read all hex
+    MOVE.B  #8, D6  * total number of address is 8 bits just to set up to compare with counter    
+Convert_Hex_to_Ascii
+    CMP.B   D5, D6  * compare the couter
+    BNE Smaller *   Set counter to read 4
+    MOVE.B  #6, D0  
+    MOVE.B  #32,    D1  
+    RTS 
+Smaller
+    MOVE.B  #0, D3  
+    MOVE.B  #4, D4  
+Read_Each_Char              *   Read Each character 
+    CMP.B   D3, D4  
+    BEQ Save_Char   
+    LSL.L   #1, D2  
+    BCC Append_Zero 
+    ADDI.B  #1, D1  
+    BRA Next_Bit  
+
+Append_Zero 
+    ADDI.B  #0, D1  
+Next_Bit
+    ADDI.B  #1, D3  
+    LSL.L   #1, D1  
+    BRA Read_Each_Char  
+Save_Char
+    LSR.L   #1, D1  
+    CMP.B   #$A,    D1  
+    BLT   Convert_Ascii_to_Hex_DisplayAdr 
+    ADDI.B  #$37,   D1  
+    BRA   Next_HEX
+
+Convert_Ascii_to_Hex_DisplayAdr 
+    ADDI.B  #$30,   D1  
+Next_HEX
+    ADDI.B  #1, D5  
+    MOVE.B  #6, D0  
+    TRAP    #15 
+    CLR.L   D1  
+    BRA Convert_Hex_to_Ascii
 
 
 ConvertInput        
@@ -311,8 +396,9 @@ BCC_Print   DC.B    'BCC',  0
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
-
+ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
