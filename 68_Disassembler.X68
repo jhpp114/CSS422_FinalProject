@@ -72,25 +72,52 @@ Check_Input_Address
     CLR.L   D2 
     CLR.L   D3  
     CLR.L   D0  *  clear d0 before use it in disassemble
-    CLR.L   D1  
+    CLR.L   D1 
+    CLR.L   D4  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7   
     MOVE.L  #$00000000, A1  
     MOVE.L  #$00000000, A2    
     MOVE.L  #$00000000, A3    
     MOVE.L  #$00000000, A4    
     
+    *MOVEA.L A6, A4  * store ending address to use after
     *BRA Finish  
+  
     
 *_______End of User Input Adr______________________________ 
 
+Disassemble_Loop
+*   Clear Loop  
+    CLR.L   D2 
+    CLR.L   D3  
+    CLR.L   D0  *  clear d0 before use it in disassemble
+    CLR.L   D1 
+    CLR.L   D4  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7   
+    MOVE.L  #$00000000, A1  
+    MOVE.L  #$00000000, A2    
+    MOVE.L  #$00000000, A3    
+    MOVE.L  #$00000000, A4  
+*   Clear Loop  
     JSR Print_Cur_Addr
     LEA ProgramEnd, A2  * A2    store   program end 
-    JSR Disassemble
-
+    JSR Disassemble  
+    MOVE.B  #$00,   (A2)+   
+    LEA ProgramEnd, A1  
+    MOVEQ   #13,    D0  
+    TRAP    #15 
+    *________Before BRA FINISH is for testin purpose_________
+    BRA Finish  *   Finish for now for testing purpose  
+    *________________________________________________________
+    BRA Disassemble_Loop    
+   
 *_______Start of reading machine code______________________
 
 Disassemble                     * while A5 is less than A6
-        CLR.L   D1      
-
         MOVE.L A5, D0
         CMP.L A6, D0
         BGE OUTPUT_RESULT
@@ -102,10 +129,10 @@ Disassemble                     * while A5 is less than A6
         BLT    INVALID_OPCODE   * invalid, need to move on to the next word
         
         CMP.B  #$3F, D1          * 0001 - 0011 -> -> 10 - 3F -> MOVE, MOVEA            * 
-        BLE    MOVEMOVEA
+        BLE    _MOVE_MOVEA
         
         CMP.B  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
-        BLE MOVEM_LEA_JSR_RTS
+        BLE _MOVEM_LEA_JSR_RTS
         
         CMP.B #$6F, D1           * 0110 -> 50 - 5F -> BCC (note it should not be 5F)
         BLE _BXX  
@@ -148,404 +175,88 @@ INVALID_OPCODE                   * skip to the next word
 * start of get EA
 * precondition: A5 points to the first byte of the current machine code, D1 contains the first byte of the command      
 *_____________________________________________________________________________________  
-MOVEMOVEA
-    LSL.L  #8, D1 
+_MOVE_MOVEA
+    LSL   #8, D1 
     ADDA #1, A5
     MOVE.B (A5)+, D1            * full opcode word in D1
-    * clear out before use  
-    CLR.L   D2      
-    CLR.L   D3  
-    CLR.L   D4  
-    CLR.L   D5  
-
     MOVE.W  D1, D2              * copy D1 to D2, for dest mode
     MOVE.W  D1, D3              * copy D1 to D3, for dest register
-    MOVE.W  D1, D4              * copy D1 to D4, for src mode
+    MOVE.W  D1, D4              * copy D1 to D2, for src mode
     MOVE.W  D1, D5              * copy D1 to D5, for src register
   
-    LSL.W  #7,  D2   
-    LSR.W  #8,  D2                     
-    LSR.W  #5,  D2              * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+    LSL   #7,  D2   
+    LSR   #8,  D2                     
+    LSR   #5,  D2              * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
 
-    LSL.W  #4,  D3              
-    LSR.W  #8,  D3                     
-    LSR.W  #5,  D3             * now D3 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest register
+    LSL   #4,  D3              
+    LSR   #8,  D3                     
+    LSR   #5,  D3             * now D3 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest register
     
-    LSL.W  #8,  D4 
-    LSL.W  #2,  D4             
-    LSR.W  #8,  D4                     
-    LSR.W  #5,  D4              * now D4 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src mode
+    LSL   #8,  D4 
+    LSL   #2,  D4             
+    LSR   #8,  D4                     
+    LSR   #5,  D4              * now D4 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src mode
     
-    LSL.W  #8,  D5  
-    LSL.W  #5,  D5
-    LSR.W  #8,  D5               
-    LSR.W  #5,  D5              * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
+    LSL   #8,  D5  
+    LSL   #5,  D5
+    LSR   #8,  D5               
+    LSR   #8,  D5              * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
     
-MOVEMOVEA_OUTPUT              * condition: D1 contains size (0000 0000 0000 00xx), D2 contains Dest mode, D3 contains dest register, D4 contains src mode, D5 contains src register    
-    CMP.W #5,   D2
-    BEQ   INVALID_OPCODE
+_MOVE_MOVEA_OUTPUT              * condition: D1 contains size (0000 0000 0000 00xx), D2 contains Dest mode, D3 contains dest register, D4 contains src mode, D5 contains src register    
     
-    CMP.W #1,   D2
-    BEQ   MOVEA_OUTPUT
-
-MOVE_OUTPUT    
+    CMP.B #1,   D2
+    BEQ   _MOVEA_OUTPUT
+    
+_MOVE_OUTPUT    
     LEA MOVE_VALUE,  A1         * print "MOVE"    
     MOVE.B  #14, D0   
-    Trap    #15 
+    Trap    #15    
    
-    LEA MOVEMOVEA_SRC, A0
+    BRA _MOVE_MOVEA_SIZE
+    
+_MOVEA_OUTPUT    
+        
+    LEA MOVEA_VALUE,  A1        * print "MOVEA"     
+    MOVE.B  #14, D0   
+    Trap    #15    
+
+_MOVE_MOVEA_SIZE
+    LEA _MOVE_MOVEA_SRC, A0
     CMP.B   #3, D1
     BEQ     PRINTWORD
     CMP.B   #2, D1
     BEQ     PRINTLONGWORD
     JMP     PRINTBYTE
     
+_MOVE_MOVEA_SRC 
     
-MOVEA_OUTPUT    
-        
-    LEA MOVEA_VALUE,  A1        * print "MOVEA"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    LEA MOVEMOVEA_SRC, A0
-    CMP.B   #3, D1
-    BEQ     PRINTWORD
-    CMP.B   #2, D1
-    BEQ     PRINTLONGWORD
-    JMP     INVALID_OPCODE
-
-    
-MOVEMOVEA_SRC 
-    CMP.B #0, D4
-    BEQ M_PRINT_DATA_REG 
+    *CMP.B D5, #$000
+    *BSR PRINT_DATA_REG 
        
-    CMP.B #1, D4 
-    BEQ M_PRINT_ADDRESS_REG
+    *CMP.B D5, #$001
+    *BSR PRINT_ADDRESS_REG
 
-    CMP.B  #2, D4
-    BEQ M_PRINT_PAREN_ADDRESS_REG
+    *CMP.B D5, #$010
+    *BSR PRINT_PAREN_ADDRESS_REG
     
-    CMP.B  #3, D4
-    BEQ M_PRINT_INCRE_ADDRESS_REG
+    *CMP.B D5, #$011
+    *BSR PRINT_INCRE_ADDRESS_REG
 
-    CMP.W #$4, D4
-    BEQ M_PRINT_DECRE_ADDRESS_REG
-    
-    CMP.W #$7,D4
-    BEQ M_PRINT_ABSOLUTE_IMMEDIATE_DATA
-    
-    BRA INVALID_OPCODE
-
-M_PRINT_DATA_REG
-    JSR PRINT_DATA_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    LEA     COMMA,  A1      * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-
-M_PRINT_ADDRESS_REG
-    JSR PRINT_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    LEA     COMMA,  A1      * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-    
-M_PRINT_PAREN_ADDRESS_REG
-    JSR PRINT_PAREN_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    LEA     COMMA,  A1      * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-    
-M_PRINT_INCRE_ADDRESS_REG
-    JSR PRINT_INCRE_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-     LEA     COMMA,  A1     * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-    
-M_PRINT_DECRE_ADDRESS_REG
-    JSR PRINT_DECRE_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-     LEA     COMMA,  A1     * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST    
-    
-M_PRINT_ABSOLUTE_IMMEDIATE_DATA                    
-    CMP.B #4, D5
-    BEQ M_PRINT_IMMEDIATE_DATA
-    
-    CMP.B #0, D5
-    BEQ M_PRINT_ABSOLUTE_ADDRESS
-    CMP.B #1, D5
-    BEQ M_PRINT_ABSOLUTE_ADDRESS
-    
-    BRA INVALID_OPCODE
-    
-M_PRINT_ABSOLUTE_ADDRESS
-    JSR PRINT_ABSOLUTE_ADDRESS
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    LEA     COMMA,  A1      * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-
-    
-M_PRINT_IMMEDIATE_DATA               
-    JSR PRINT_IMMEDIATE_DATA
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15   
-     LEA     COMMA,  A1     * print comma    
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA MOVEMOVEA_DEST
-                   
-* D5 contains the register number    
-PRINT_IMMEDIATE_DATA 
-    *if size is byte or word
-    CMP.B   #2, D1
-    BEQ     READLONGWORD
-    
-    *if size is byte or word
-    MOVE.W  (A5)+, (A2)+
-    RTS
-    
-    *if size is long word
-READLONGWORD    
-    MOVE.L  (A5)+, (A2)+
-    RTS
-    
-PRINT_ABSOLUTE_ADDRESS    
-    CMP.B #0, D5
-    BNE LONGWORD_ADDR
-    MOVE.W  (A5)+, (A2)+
-    RTS
-LONGWORD_ADDR
-    MOVE.L  (A5)+, (A2)+
-    RTS
-    
-PRINT_DATA_REG
-    CMP.B   #7, D5           * check n > 7
-    BGT     INVALID_OPCODE
-    
-    LEA D,  A1              * print "D"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-
-    MOVE.B  D5,  D1         *print register number
-    ADD.B   #$30, D1  
-    MOVE.B  #6, D0   
-    Trap    #15 
-    RTS
-    
-PRINT_ADDRESS_REG
-    CMP.B   #7, D5           * check n > 7
-    BGT     INVALID_OPCODE
-    
-    LEA A,  A1              * print "A"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-
-    MOVE.B  D5,  D1         *print register number
-    ADD.B   #$30, D1  
-    MOVE.B  #6, D0   
-    Trap    #15 
-    RTS
-
-PRINT_PAREN_ADDRESS_REG
-    CMP.B   #7, D5           * check n > 7
-    BGT     INVALID_OPCODE
-        
-    LEA OPENING_BRACKET,  A1              * print "("     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA A,  A1              * print "A"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA CLOSING_BRACKET,  A1              * print ")"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-
-    MOVE.B  D5,  D1         *print register number
-    ADD.B   #$30, D1  
-    MOVE.B  #6, D0   
-    Trap    #15 
-    RTS
-
-PRINT_INCRE_ADDRESS_REG
-    CMP.B   #7, D5           * check n > 7
-    BGT     INVALID_OPCODE
-        
-    LEA OPENING_BRACKET,  A1              * print "("     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA A,  A1                         * print "A"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-     MOVE.B  D5,  D1         *print register number
-    ADD.B   #$30, D1  
-    MOVE.B  #6, D0   
-    Trap    #15 
-    
-    LEA CLOSING_BRACKET,  A1              * print ")"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA PLUS_SIGN,  A1              * print "+"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-
-   
-    RTS
-    
-
-PRINT_DECRE_ADDRESS_REG
-    CMP.B   #7, D5           * check n > 7
-    BGT     INVALID_OPCODE
-    
-        
-    LEA MINUS_SIGN,  A1              * print "-"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA OPENING_BRACKET,  A1              * print "("     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    
-    LEA A,  A1                         * print "A"     
-    MOVE.B  #14, D0   
-    Trap    #15  
-    
-    MOVE.B  D5,  D1         *print register number
-    ADD.B   #$30, D1  
-    MOVE.B  #6, D0   
-    Trap    #15 
-    
-    LEA CLOSING_BRACKET,  A1              * print ")"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-
-
-    RTS
-        
-MOVEMOVEA_DEST
-    MOVE.L D2, D4      
-    MOVE.L D3, D5
-    CMP.B #$000, D4
-    BEQ MD_PRINT_DATA_REG 
-       
-    CMP.B  #$010, D4
-    BEQ MD_PRINT_PAREN_ADDRESS_REG
-    
-    CMP.B  #$011, D4
-    BEQ MD_PRINT_INCRE_ADDRESS_REG
-
-    CMP.W #$100, D4
-    BEQ MD_PRINT_DECRE_ADDRESS_REG
-    
-    CMP.W #$111,D4
-    BEQ MD_PRINT_ABSOLUTE_IMMEDIATE_DATA
-    
-    BRA INVALID_OPCODE
-MD_PRINT_DATA_REG
-    JSR PRINT_DATA_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    BRA     CHECK_INPUT_ADDRESS
-MD_PRINT_ADDRESS_REG
-    JSR PRINT_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA     CHECK_INPUT_ADDRESS    
-MD_PRINT_PAREN_ADDRESS_REG
-    JSR PRINT_PAREN_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA     CHECK_INPUT_ADDRESS    
-MD_PRINT_INCRE_ADDRESS_REG
-    JSR PRINT_PAREN_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA     CHECK_INPUT_ADDRESS    
-MD_PRINT_DECRE_ADDRESS_REG
-    JSR PRINT_PAREN_ADDRESS_REG
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-
-    BRA     CHECK_INPUT_ADDRESS    
-MD_PRINT_ABSOLUTE_IMMEDIATE_DATA                    
-    CMP.B #4, D5
-    BEQ M_PRINT_IMMEDIATE_DATA
-    
-    CMP.B #0, D5
-    BEQ M_PRINT_ABSOLUTE_ADDRESS
-    CMP.B #1, D5
-    BEQ M_PRINT_ABSOLUTE_ADDRESS
-    
-    BRA     CHECK_INPUT_ADDRESS    
-MD_PRINT_ABSOLUTE_ADDRESS
-    JSR PRINT_ABSOLUTE_ADDRESS
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    BRA     CHECK_INPUT_ADDRESS
-
-    
-MD_PRINT_IMMEDIATE_DATA               
-    JSR PRINT_IMMEDIATE_DATA
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15   
-    BRA MOVEMOVEA_DEST
-
+    *CMP.B D5, #$100
+    *BSR PRINT_DECRE_ADDRESS_REG
+_MOVE_MOVEA_DEST      
                   
     *CMP.B #$1F                  * size Byte
-    *BLE   MOVEMOVEA_B
+    *BLE   _MOVE_MOVEA_B
       
     *CMP.B #$2F                  *size Word
-    *BLE   MOVEMOVEA_W
+    *BLE   _MOVE_MOVEA_W
     
-    *CMP.B #$2F                  *size Longword+++
-    *BLE   MOVEMOVEA_L
+    *CMP.B #$2F                  *size Longword
+    *BLE   _MOVE_MOVEA_L
     
     
-MOVEM_LEA_JSR_RTS
+_MOVEM_LEA_JSR_RTS
 *____________________BCC BLE BGT____________________________    
 _BXX    
 * clear out before use
@@ -555,13 +266,11 @@ _BXX
     CLR.L   D5  
     CLR.L   D6  
     CLR.L   D7  
-* clear out before usewed
+* clear out before use
     MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
     MOVE.W  D2, D6    
     ROL.W   #4, D6  
-    *ANDI.W  #$000F, D6  
-    *MULU    #8, D6  
-    
+
     MOVE.W  D6, D5    
     ROL.W   #4, D6  
     MOVE.W  D6, D5  
@@ -572,7 +281,8 @@ _BXX
     BEQ _BGT
     CMP.W   #$4,    D6  
     BEQ _BCC
-    BRA INVALID_OPCODE
+    BRA INVALID_OPCODE  
+ 
         
 _BCC
     MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program  
@@ -581,34 +291,107 @@ _BCC
     MOVE.B  #' ',   (A2)+   * little space
     MOVE.B  #' ',   (A2)+   * little space
     BRA BXX_Displacement 
- 
     
 _BLE
-    
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'L',   (A2)+   
+    MOVE.B  #'E',   (A2)+  
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    BRA  BXX_Displacement   
+        
 _BGT
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'G',   (A2)+   
+    MOVE.B  #'T',   (A2)+  
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+  
+    BRA BXX_Displacement
 
 BXX_Displacement    
+    MOVE.B  #0, D0  *   set up counter 0 to 8, its for byte 
+    MOVE.B  #8, D3  *   counter max  
     MOVE.W  D2, D6  *   Load full memory 
-    MOVE.L  A5, D5  *   Load current starting adr from user
-    MOVE.B  #0, D1  *   set up counter 0 to 8   
-    MOVE.B  #8, D2  
-    ANDI.W  #$00FF, D6  *   00XX
-    CMP.W   #$00,   D6  *   if 00 then it should be 8bit displacement   
-    BEQ BXX_DISPLACEMENT_WORD      
+    MOVE.L  A5, D5  *   Load current starting adr from user 
+    ANDI.W  #$00FF, D6  *   00XX   
     CMP.W   #$FF,   D6  *   if  FF then it should be 16 bits displacement   
-    BEQ BXX_DISPLACEMENT_LONG   
+    BEQ BXX_DISPLACEMENT_LONG      
+    CMP.W   #$00,   D6  *   if 00 then it should be 8bit displacement (word)    
+    BEQ BXX_DISPLACEMENT_WORD 
     BRA BXX_DISPLACEMENT_8Bit   *   rest of them are 8 bit  
   
    
 BXX_DISPLACEMENT_8Bit
-    MOVE.W  D2, D6  *   Load full memory    
-    BRA Finish  *   End for now 
-
+    ROL.B   #1, D6  * used 6450 -> xx50 -> 0101 0000 -> 1010 xxxx   
+    BCS BXX_Last_Ones_Convert   *   Convert 1s  
+    ADDI.B  #1, D6  
+    BRA BXX_TwosComplement_Cal
+    
+BXX_Last_Ones_Convert   
+    SUBI.B  #1, D6  
+    BRA BXX_TwosComplement_Cal
+          
+BXX_TwosComplement_Cal   
+    ADDI.B  #1, D0  *   Increase counter set up at displacement  
+    CMP.B   D0, D3  *   Check if it is last loop        
+    BEQ BXX_TwosComplement_Last_Add     *   complement done go to add   
+    CMP.B   #8, D3  *   Check if the size is for 8bit   
+    BEQ BXX_DISPLACEMENT_8Bit 
+    CMP.B   #16,    D3  * Check for the 16 bits disp
+    BEQ BXX_Complement_Word
+    BRA BXX_TwosComplement_Last_Add 
+    
 BXX_DISPLACEMENT_WORD
-
+    MOVE.B  #16,    D3  * set up counter for word   16 bits 
+    MOVE.W  (A5)+,  D6  * store the next memory for displacement next word       
+    MOVE.W  D6, D1  *   copy next word to d1 to test    
+    ANDI.W  #$8000, D1  *   Set up to test if it has to go back
+    CMP.W   #$8000, D1  
+    BNE BXX_DISPLACEMENT_WORD_JUST_PRINT    * Not equal then just print
+BXX_Complement_Word    
+    ROL.W   #1, D6  *   check word size bit 
+    BCS BXX_Last_Ones_Convert   *   convert 1s  
+    ADDI.B  #1, D6  *   these are 0s    
+    BRA BXX_TwosComplement_Cal  
+    
+BXX_DISPLACEMENT_WORD_JUST_PRINT
+    ADD.W   D6, D5  * just print (add d6 to current adr)
+    BRA Display_BXX *   go to display   
+    
 BXX_DISPLACEMENT_LONG   
+    * will be implemented
 
-
+BXX_TwosComplement_Last_Add   
+    ADDI.W  #$1,    D6  *   Add 1 at the end to the bit   
+    SUB.L   D6, D5  
+   
+Display_BXX    
+    CMP.L   #$FFFF, D5  *   check if the size is for longword size
+    BGT Display_BXX_Long_Word
+    MOVE.B  #4, D3  
+    CLR.L   D7  
+    JSR Ascii_Convert_BXX   
+    RTS 
+Display_BXX_Long_Word
+    * will be implemented
+    
+Ascii_Convert_BXX
+    ROL.W   #4, D5  
+    MOVE.L  D5, D4  
+    ANDI.L  #$0000000F, D4  *   just compare last 4 bits
+    CMPI.B  #$09,   D4      *   check is number or letter      
+    BLE  IS_NUM 
+    ADDI.B  #$37,   D4
+    BRA IS_LET   
+IS_NUM  
+    ADDI.B  #$30,   D4  
+    BRA IS_LET  
+IS_LET  
+    ADDI.B  #1, D7    
+    MOVE.B  D4, (A2)+   
+    CMP.B   D3, D7    
+    BLT Ascii_Convert_BXX
+    RTS 
 
 *___________________END OF B brothers__________________________ 
 _OR
@@ -631,6 +414,9 @@ Print_Cur_Addr
 Convert_Hex_to_Ascii
     CMP.B   D5, D6  * compare the couter
     BNE Smaller *   Set counter to read 4
+    JSR Bigger
+    RTS  
+Bigger
     MOVE.B  #6, D0  
     MOVE.B  #32,    D1  
     RTS 
@@ -656,16 +442,21 @@ Save_Char
     CMP.B   #$A,    D1  
     BLT   Convert_Ascii_to_Hex_DisplayAdr 
     ADDI.B  #$37,   D1  
-    BRA   Next_HEX
-
-Convert_Ascii_to_Hex_DisplayAdr 
-    ADDI.B  #$30,   D1  
-Next_HEX
+    ADDI.B  #$30,   D1 
     ADDI.B  #1, D5  
     MOVE.B  #6, D0  
     TRAP    #15 
     CLR.L   D1  
     BRA Convert_Hex_to_Ascii
+
+Convert_Ascii_to_Hex_DisplayAdr 
+    ADDI.B  #$30,   D1 
+    ADDI.B  #1, D5  
+    MOVE.B  #6, D0  
+    TRAP    #15 
+    CLR.L   D1  
+    BRA Convert_Hex_to_Ascii 
+
 
 ConvertInput        
        MOVE.B  (A1)+,  D2   
@@ -713,32 +504,21 @@ SmallLetter
         SUB.B   #$57,   D2    
         RTS
 PRINTBYTE
-    LEA BYTE_SUFFIX,  A1        * print ".B"     
+    LEA MOVEA_VALUE,  A1        * print ".B"     
     MOVE.B  #14, D0   
     Trap    #15
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-    
     JMP     (A0)    
 PRINTWORD
-    LEA WORD_SUFFIX,  A1        * print ".W"     
+    LEA MOVEA_VALUE,  A1        * print ".W"     
     MOVE.B  #14, D0   
     Trap    #15
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
-
     JMP     (A0)
 
 
 PRINTLONGWORD
-    LEA LONG_SUFFIX,  A1        * print ".L"     
+    LEA MOVEA_VALUE,  A1        * print ".L"     
     MOVE.B  #14, D0   
     Trap    #15    
-    LEA     TAB,  A1        * print tab     
-    MOVE.B  #14, D0   
-    Trap    #15
     JMP     (A0)
     
 
@@ -865,7 +645,6 @@ C                       DC.W        'C',0
 D                       DC.W        'D',0
 E                       DC.W        'E',0
 F                       DC.W        'F',0
-TAB                     DC.W        '  ',0
 
    
 *_______________________________________________________________________________
@@ -880,9 +659,6 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
-
-
-
 
 
 
