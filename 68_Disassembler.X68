@@ -398,7 +398,74 @@ _OR
 _SUB
 _CMP
 _AND
+
 _ADD
+    LEA	ADD_VALUE,	A1
+	MOVE.B	#14,	D0
+	TRAP	#15
+	lsl	#8,	D1
+	ADDA	#1,	A5
+	MOVE.B	(A5)+,	D1
+
+	MOVE.W	D1,	D2
+	MOVE.W	D1,	D3
+	MOVE.W	D1,	D4
+	MOVE.W	D1,	D5
+
+
+    LSL   #7,  D2   
+    LSR   #8,  D2                     
+    LSR   #5,  D2              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is op mode
+	BRA _ADD_OP_MODE
+
+    LSL   #4,  D3              
+    LSR   #8,  D3                     
+    LSR   #5,  D3             * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is register
+    BRA _ADD_REG
+
+    LSL   #8,  D4 
+    LSL   #2,  D4             
+    LSR   #8,  D4                     
+    LSR   #5,  D4              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is ea mode
+
+    LSL   #8,  D5  
+    LSL   #5,  D5
+    LSR   #8,  D5               
+    LSR   #8,  D5              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is ea register
+    BRA _ADD_
+
+
+_ADD_OP_MODE:
+	CMP.W	#$0000, D2	
+	BEQ	PRINTBYTE
+	CMP.W	#$0100, D2
+	BEQ	PRINTBYTE
+	CMP.W	#$0001,	D2
+	BEQ	PRINTWORD
+	CMP.W	#$0101,	D2
+	BEQ	PRINTWORD
+	CMP.W	#$0010,	D2
+	BEQ	PRINTLONG
+	CMP.W	#$0110,	D2
+	BEQ	PRINTLONG
+
+_ADD_REG:
+	*Need to differentiate between OP modes here for register to be done properly
+	
+_ADD_EA
+	*CMP.W #$0000,	D4
+	*BEQ	_ADD_DN
+	*CMP.W	#$0001,	D4
+	*BEQ	_ADD_AN
+	*CMP.W	#$0010,	D4
+	*BEQ	_ADD_PRE_DECREMENT
+	*CMP.W	#$0011,	D4
+	*BEQ	_ADD_POST_INCREMENT
+	*CMP.W	#$0111, D4
+	*BEQ	_ADD_IMMEDIATE_DATA
+
+    
+
 _LSL_ASR
 *------------------------------------------------
 * start to print final result
