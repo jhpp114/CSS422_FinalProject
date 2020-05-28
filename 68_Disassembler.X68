@@ -395,7 +395,59 @@ IS_LET
 
 *___________________END OF B brothers__________________________ 
 _OR
+
+*______________________SUB_____________________________________________
 _SUB
+* clear out before use
+    CLR.L   D0  
+    CLR.L   D2      
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7  
+* clear out before use
+    MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
+    MOVE.W  D2, D6    *     put it into d6 for safe bit play    
+    * shoud not call this maybe bad opmode or some weired register exist.   
+        *MOVE.B  #'S',   (A2)+   
+    *MOVE.B  #'U',   (A2)+   
+    *MOVE.B  #'B',   (A2)+   
+    *MOVE.B  #'.',   (A2)+   
+    * Basic idea
+        * all sub 1001 do and operation with 0000 will just 0000
+    * if it is ea - dn then 1001 xxx, xxx cannot be 000 so if you do and operation 000 then its always result as 0  
+    * after 1001 xxx, then its opmode, for byte (ea - dn) it is always starting with 0 so do and with 1 so it is 0000 
+    * Rest of two digit for opmode     
+    *   11 and 00  = 00, 11 01 = 01, 11 10 = 10 use this to distinguish 
+    ANDI.W  #$01C0, D6  
+    * Check opmode using above logic    
+    CMP.W   #$0000, D6
+    BEQ _Byte_EA_DN     
+    CMP.W   #$0040, D6  
+    BEQ _Word_EA_DN 
+    CMP.W   #0080,  D6  
+    BEQ _Longword_EA_DN 
+    * to check DN - EA, since it is same but 1 infront, just put 01 instead of 00   
+    CMP.W   #$0100, D6  
+    BEQ _Byte_DN_EA 
+    CMP.W   #$0140, D6  
+    BEQ _Word_DN_EA 
+    CMP.W   #$0180, D6  
+    BEQ _Longword_DN_EA 
+    *_________Else__________Invalid Data_______________ 
+    
+_Byte_EA_DN     
+    
+_Word_EA_DN
+
+_Longword_EA_DN
+
+_Byte_DN_EA
+
+_Word_DN_EA
+
+_Longword_DN_EA
+*____________________END OF SUB________________________________________
 _CMP
 _AND
 
@@ -432,7 +484,7 @@ _ADD
     LSL   #5,  D5
     LSR   #8,  D5               
     LSR   #8,  D5              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is ea register
-    BRA _ADD_
+    *BRA _ADD_
 
 
 _ADD_OP_MODE:
@@ -445,9 +497,9 @@ _ADD_OP_MODE:
 	CMP.W	#$0101,	D2
 	BEQ	PRINTWORD
 	CMP.W	#$0010,	D2
-	BEQ	PRINTLONG
+	*BEQ	PRINTLONG
 	CMP.W	#$0110,	D2
-	BEQ	PRINTLONG
+	*BEQ	PRINTLONG
 
 _ADD_REG:
 	*Need to differentiate between OP modes here for register to be done properly
@@ -726,6 +778,7 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
