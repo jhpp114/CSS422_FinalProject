@@ -444,8 +444,21 @@ _Byte_EA_DN
     MOVE.B  #'B',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-    JSR Calculate_EA_Mode   
-    
+    JSR Calculate_EA_Mode          
+    * land it on here   
+    MOVE.B  #',',     (A2)+   
+    MOVE.B  #'D',    (A2)+   *Always D   
+    MOVE.W  D2,   D4    
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field    
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4    
+    *ROL.W   #4, D4  
+    *ROL.W   #4, D4  
+    MOVE.W  D4, D5  
+    ANDI.W  #$0007, D4  * same logic, check the number 000, 001, 010, etc          
+    JSR Register_Lists  
+    RTS 
    
 _Word_EA_DN
     MOVE.B  #'S',   (A2)+   
@@ -455,7 +468,7 @@ _Word_EA_DN
     MOVE.B  #'W',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-    JSR Calculate_EA_Mode   
+    BRA Calculate_EA_Mode     
       
 
 _Longword_EA_DN
@@ -505,17 +518,89 @@ _Longword_DN_EA
 Calculate_EA_Mode   
     MOVE.W  D2, D3  * move data value to d3 for shifting purpose
     ROL.W   #4, D3  * Shift
-    ROL.W   #3, D3  
-    ROL.W   #3, D3  
-    ROL.W   #3, D3      
-    ANDI.W  #$0007, D3  * check last 3 bits which is mode      
-    BRA Finish  
+        ROL.W   #3, D3  
+        ROL.W   #3, D3  
+        ROL.W   #3, D3    
+        MOVE.W  D3, D4    
+        ANDI.W  #$0007, D3  * check last 3 bits which is mode   
+        
+        
+        JSR  EA_Lists  
+
+        RTS * go bacc k to     _Byte_EA_DN 
+    *BRA Finish  
 
 
 EA_Lists
-    
-*______________________END OF SUB EA_____________________________________________
+    CMP.W   #$000,  D3  
+    BEQ EA_List_000 
+    CMP.W   #$001,  D3  
+    BEQ EA_List_001 
+    RTS *  RTS for now  
 
+EA_List_000 
+    MOVE.B  #'D',   (A2)+   
+    * will reset to whatever it was so the last 3 bit is Register   
+    *  MOVE.W  D3, D4  * copy the value for safety shift   
+    ROL.W   #3, D4  * D4 will contains the orignial value   
+    MOVE.W  D4, D3  
+    ANDI.W  #$0007, D4  *   Check last 3 bits (register)    
+    JSR Register_Lists  
+    RTS 
+EA_List_001
+
+*______________________ Lists of Registers________________________________________________  
+Register_Lists
+    CMP.W   #$0000, D4  
+    BEQ Resgister_000   
+    CMP.W   #$0001, D4  
+    BEQ Register_001
+    CMP.W   #$0010, D4  
+    BEQ Register_010    
+    CMP.W   #$0011, D4  
+    BEQ Register_011    
+    CMP.W   #$0100, D4  
+    BEQ Register_100    
+    CMP.W   #$0101, D4  
+    BEQ Register_101    
+    CMP.W   #$0110, D4  
+    BEQ Register_110    
+    CMP.W   #$0111, D4  
+    BEQ Register_111    
+    
+    CMP.W   #1, D4
+    BEQ   Register_001
+    CMP.W   #2, D4  
+    BEQ Register_010
+Resgister_000
+
+Register_001    
+        MOVE.W  D3, D4  * get the value of memory again  
+    ROL.W   #8, D4  
+    ROL.W   #5, D4  
+    ANDI.W  #$0007, D4    
+    CMP.B   #$7,    D4  
+    BNE Just_One
+    MOVE.B  #0, D4  
+    MOVE.B  #'$',   (A2)+   
+    *MOVE.W  
+Just_One           
+    MOVE.B  #'1',   (A2)+      
+    RTS 
+
+Register_010
+    MOVE.B  #'2',   (A2)+   
+    RTS 
+Register_011
+ 
+Register_100    
+
+Register_101
+
+Register_110
+
+Register_111
+*______________________END OF SUB EA_____________________________________________
 _CMP
 _AND
 
