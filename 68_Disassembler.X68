@@ -444,8 +444,9 @@ _Byte_EA_DN
     MOVE.B  #'B',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-    * require EA    
-    RTS  
+    JSR Calculate_EA_Mode   
+    
+   
 _Word_EA_DN
     MOVE.B  #'S',   (A2)+   
     MOVE.B  #'U',   (A2)+   
@@ -454,7 +455,8 @@ _Word_EA_DN
     MOVE.B  #'W',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-    * require EA    
+    JSR Calculate_EA_Mode   
+      
 
 _Longword_EA_DN
     MOVE.B  #'S',   (A2)+   
@@ -492,6 +494,28 @@ _Longword_DN_EA
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
 *____________________END OF SUB________________________________________
+
+* Basic idea
+* 000 to 110 so, need to compare with three bits
+* Shift until the the Mode in EA is the last bit    
+* Simply check the shifted last 3 bit (mode)
+*  000 and 111 -> 000
+*  001 and 111 - > 001
+*  010 and 111 -> 010 etc etc 
+Calculate_EA_Mode   
+    MOVE.W  D2, D3  * move data value to d3 for shifting purpose
+    ROL.W   #4, D3  * Shift
+    ROL.W   #3, D3  
+    ROL.W   #3, D3  
+    ROL.W   #3, D3      
+    ANDI.W  #$0007, D3  * check last 3 bits which is mode      
+    BRA Finish  
+
+
+EA_Lists
+    
+*______________________END OF SUB EA_____________________________________________
+
 _CMP
 _AND
 
@@ -683,9 +707,6 @@ PRINTLONGWORD
     MOVE.B  #14, D0   
     Trap    #15    
     JMP     (A0)
-    
-
-  
 *_________________________Error Handle___________________________________      
 Input_Error_Handler
         BRA Invalid 
