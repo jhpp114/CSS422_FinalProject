@@ -121,45 +121,45 @@ Disassemble                     * while A5 is less than A6
         MOVE.L A5, D0
         CMP.L A6, D0
         BGE OUTPUT_RESULT
-        
+        CLR.L   D1  
         MOVE.B (A5), D1        * read a byte from from A5, store to D1. This contains opcode
-        
+         
         *valid opcode bits cases: 10-EF
-        CMP.B #$10, D1     
+        CMP.W   #$10, D1             
         BLT    INVALID_OPCODE   * invalid, need to move on to the next word
         
-        CMP.B  #$3F, D1          * 0001 - 0011 -> -> 10 - 3F -> MOVE, MOVEA            * 
+        CMP.W  #$3F, D1          * 0001 - 0011 -> -> 10 - 3F -> MOVE, MOVEA            * 
         BLE    _MOVE_MOVEA
         
-        CMP.B  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
+        CMP.W  #$4F, D1          * 0100 -> 40 - 4F -> MOVEM, LEA, JSR, RTS
         BLE _MOVEM_LEA_JSR_RTS
         
-        CMP.B #$6F, D1           * 0110 -> 50 - 5F -> BCC (note it should not be 5F)
+        CMP.W #$6F, D1           * 0110 -> 50 - 5F -> BCC (note it should not be 5F)
         BLE _BXX  
         
-        CMP.B #$80, D1           * 60 - 7F invalid
+        CMP.W #$80, D1           * 60 - 7F invalid
         BLT    INVALID_OPCODE    * invalid, need to move on to the next word
 
         
-        CMP.B #$8F, D1           * 1000 -> 80 - 8F -> OR
+        CMP.W #$8F, D1           * 1000 -> 80 - 8F -> OR
         BLE _OR
         
-        CMP.B #$9F, D1           * 1001 -> 90 - 9F -> SUB
+        CMP.W #$9F, D1           * 1001 -> 90 - 9F -> SUB
         BLE _SUB
         
-        CMP.B #$B0, D1           * A0 - AF invalid
+        CMP.W #$B0, D1           * A0 - AF invalid
         BLT    INVALID_OPCODE    * invalid, need to move on to the next word
 
-        CMP.B #$BF, D1           * 1011 -> B0 - BF -> CMP
+        CMP.W #$BF, D1           * 1011 -> B0 - BF -> CMP
         BLE _CMP
         
-        CMP.B #$CF, D1           * 1100 -> C0- CF -> AND
+        CMP.W #$CF, D1           * 1100 -> C0- CF -> AND
         BLE _AND
         
-        CMP.B #$DF, D1           * 1101 -> D0 - DF -> ADD
+        CMP.W #$DF, D1           * 1101 -> D0 - DF -> ADD
         BLE _ADD
         
-        CMP.B #$EF, D1           * 1110 -> E0 - EF -> LSL, ASR
+        CMP.W #$EF, D1           * 1110 -> E0 - EF -> LSL, ASR
         BLE _LSL_ASR
         
         BRA INVALID_OPCODE
@@ -414,7 +414,7 @@ _SUB
     *MOVE.B  #'B',   (A2)+   
     *MOVE.B  #'.',   (A2)+   
     * Basic idea
-        * all sub 1001 do and operation with 0000 will just 0000
+    * all sub 1001 do and operation with 0000 will just 0000
     * if it is ea - dn then 1001 xxx, xxx cannot be 000 so if you do and operation 000 then its always result as 0  
     * after 1001 xxx, then its opmode, for byte (ea - dn) it is always starting with 0 so do and with 1 so it is 0000 
     * Rest of two digit for opmode     
@@ -437,16 +437,60 @@ _SUB
     *_________Else__________Invalid Data_______________ 
     
 _Byte_EA_DN     
-    
+    MOVE.B  #'S',   (A2)+  
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    * require EA    
+    RTS  
 _Word_EA_DN
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    MOVE.B  #'W',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    * require EA    
 
 _Longword_EA_DN
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    MOVE.B  #'L',   (A2)+    
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
 
 _Byte_DN_EA
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
 
 _Word_DN_EA
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    MOVE.B  #'W',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
 
 _Longword_DN_EA
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'U',   (A2)+   
+    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    MOVE.B  #'L',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
 *____________________END OF SUB________________________________________
 _CMP
 _AND
@@ -778,6 +822,8 @@ StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
+
 
 
 
