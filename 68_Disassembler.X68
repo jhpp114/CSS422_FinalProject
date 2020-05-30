@@ -881,7 +881,7 @@ Save_Char
     CMP.B   #$A,    D1  
     BLT   Convert_Ascii_to_Hex_DisplayAdr 
     ADDI.B  #$37,   D1  
-    ADDI.B  #$30,   D1 
+    *ADDI.B  #$30,   D1 
     ADDI.B  #1, D5  
     MOVE.B  #6, D0  
     TRAP    #15 
