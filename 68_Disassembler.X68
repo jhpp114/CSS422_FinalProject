@@ -180,84 +180,61 @@ INVALID_OPCODE                   * skip to the next word
 * precondition: A5 points to the first byte of the current machine code, D1 contains the first byte of the command      
 *_____________________________________________________________________________________  
 _MOVE_MOVEA
-    LSL   #8, D1 
-    ADDA #1, A5
-    MOVE.B (A5)+, D1            * full opcode word in D1
-    MOVE.W  D1, D2              * copy D1 to D2, for dest mode
-    MOVE.W  D1, D3              * copy D1 to D3, for dest register
-    MOVE.W  D1, D4              * copy D1 to D2, for src mode
-    MOVE.W  D1, D5              * copy D1 to D5, for src register
-  
-    LSL   #7,  D2   
-    LSR   #8,  D2                     
-    LSR   #5,  D2              * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
-
-    LSL   #4,  D3              
-    LSR   #8,  D3                     
-    LSR   #5,  D3             * now D3 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest register
-    
-    LSL   #8,  D4 
-    LSL   #2,  D4             
-    LSR   #8,  D4                     
-    LSR   #5,  D4              * now D4 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src mode
-    
-    LSL   #8,  D5  
-    LSL   #5,  D5
-    LSR   #8,  D5               
-    LSR   #8,  D5              * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
-    
-_MOVE_MOVEA_OUTPUT              * condition: D1 contains size (0000 0000 0000 00xx), D2 contains Dest mode, D3 contains dest register, D4 contains src mode, D5 contains src register    
+    MOVE.B  #'M',   (A2)+   
+    MOVE.B  #'O',   (A2)+   
+    MOVE.B  #'V',   (A2)+  
+    MOVE.B  #'E',   (A2)+ 
+    JSR PREPARE_DATA_REG
     
     CMP.B #1,   D2
-    BEQ   _MOVEA_OUTPUT
-    
-_MOVE_OUTPUT    
-    LEA MOVE_VALUE,  A1         * print "MOVE"    
-    MOVE.B  #14, D0   
-    Trap    #15    
-   
-    BRA _MOVE_MOVEA_SIZE
-    
-_MOVEA_OUTPUT    
-        
-    LEA MOVEA_VALUE,  A1        * print "MOVEA"     
-    MOVE.B  #14, D0   
-    Trap    #15    
+    BNE MOVE_MOVEA_SIZE
+    MOVE.B  #'A',   (A2)+
 
-_MOVE_MOVEA_SIZE
-    LEA _MOVE_MOVEA_SRC, A0
+MOVE_MOVEA_SIZE
+    LEA MOVE_MOVEA_SRC, A0
     CMP.B   #3, D1
-    BEQ     PRINTWORD
+    BEQ     PRINT_WORD
     CMP.B   #2, D1
-    BEQ     PRINTLONGWORD
-    JMP     PRINTBYTE
+    BEQ     PRINT_LONGWORD
+    JMP     PRINT_BYTE
     
-_MOVE_MOVEA_SRC 
+MOVE_MOVEA_SRC
+    JSR PRINT_TAB
+    CMP.W #$4,D4
+    BLE TO_EA
+IS_SEVEN
+    CMP.W #$7,D4
+    BNE INVALID_OPCODE
+TO_EA
+    JSR EA
     
-    *CMP.B D5, #$000
-    *BSR PRINT_DATA_REG 
+    MOVE.B  #',',   (A2)+  
+    
+MOVE_MOVEA_DEST
+    JSR PRINT_TAB
+    MOVE.L D2, D4      
+    MOVE.L D3, D5
+    
+    CMP.B #$000, D4
+    BEQ TO_EA_2 
        
-    *CMP.B D5, #$001
-    *BSR PRINT_ADDRESS_REG
+    CMP.B  #$2, D4
+    BEQ TO_EA_2 
+       
+    CMP.B  #$3, D4
+    BEQ TO_EA_2 
 
-    *CMP.B D5, #$010
-    *BSR PRINT_PAREN_ADDRESS_REG
+    CMP.W #$4, D4
+    BEQ TO_EA_2 
     
-    *CMP.B D5, #$011
-    *BSR PRINT_INCRE_ADDRESS_REG
+    CMP.W #$7,D4
+    BEQ TO_EA_2 
+    
+    BRA INVALID_OPCODE
+TO_EA_2
+   JSR EA
+   BRA OUTPUT_RESULT
 
-    *CMP.B D5, #$100
-    *BSR PRINT_DECRE_ADDRESS_REG
-_MOVE_MOVEA_DEST      
-                  
-    *CMP.B #$1F                  * size Byte
-    *BLE   _MOVE_MOVEA_B
-      
-    *CMP.B #$2F                  *size Word
-    *BLE   _MOVE_MOVEA_W
-    
-    *CMP.B #$2F                  *size Longword
-    *BLE   _MOVE_MOVEA_L
     
 
 *______________________MOVEM_LEA_JSR_RTS____________________    
@@ -922,6 +899,138 @@ _ADD_EA
     
 
 _LSL_ASR
+*bit 6 and 7 determines memory or register
+    JSR PREPARE_DATA_REG
+    CMP.B #$01, D4
+    BEQ LSX
+    CMP.B #$00, D4
+    BEQ ASX
+    BRA INVALID_OPCODE  
+
+LSX
+    MOVE.B #'L', (A2)+
+    MOVE.B #'S', (A2)+
+    CMP.W #4, D2
+    BGE LEFT_SHIFT
+
+RIGHT_SHIFT
+    MOVE.B #'R', (A2)+
+    BRA DETERMINE_SHIFT_TYPE    
+LEFT_SHIFT
+    MOVE.B #'L', (A2)+
+DETERMINE_SHIFT_TYPE
+    CMP.B #3, D2
+    BEQ SHIFT_MEM
+    
+SHIFT_REG
+    LEA SHIFT_TYPE, A0
+    LSL.W #8, D1
+    LSR.W #8, D1
+    LSR.W #6, D1    
+    CMP.B   #0, D1
+    BEQ     PRINT_BYTE
+    CMP.B   #1, D1
+    BEQ     PRINT_WORD
+    CMP.B   #2, D1
+    BEQ     PRINT_LONGWORD
+    BRA     INVALID_OPCODE
+SHIFT_TYPE
+    CMP.W #$5, D4
+    BEQ    REG_SHIFT
+    CMP.W #$1, D4
+    BEQ    NUM_SHIFT
+    BRA INVALID_OPCODE
+REG_SHIFT
+    JSR PRINT_TAB
+    MOVE.B #'D', (A2)+
+    ADD.W #$30, D3
+    MOVE.B D3, (A2)+
+    BRA SHIFT_DEST
+NUM_SHIFT
+    JSR PRINT_TAB
+    MOVE.B #'#', (A2)+
+    CMP.W #0, D3
+    BEQ EIGHT
+    ADD.W #$30, D3
+    MOVE.B D3, (A2)+    
+    BRA SHIFT_DEST
+EIGHT 
+    MOVE.B #'8', (A2)+
+    BRA SHIFT_DEST
+SHIFT_DEST
+    JSR PRINT_TAB
+    MOVE.B #'D', (A2)+
+    ADD.W #$30, D5
+    MOVE.B D5, (A2)+
+    BRA OUTPUT_RESULT
+SHIFT_MEM
+    CMP.W #$010, D4
+    BLT INVALID_OPCODE
+    JSR EA
+    BRA OUTPUT_RESULT
+ASX
+    MOVE.B #'A', (A2)+
+    MOVE.B #'S', (A2)+
+    CMP.W #4, D2
+    BGE LEFT_ROTATE
+
+RIGHT_ROTATE
+    MOVE.B #'R', (A2)+
+    BRA DETERMINE_ROTATE_TYPE    
+LEFT_ROTATE
+    MOVE.B #'L', (A2)+
+DETERMINE_ROTATE_TYPE
+    CMP.B #3, D2
+    BEQ ROTATE_MEM
+    
+ROTATE_REG
+    LEA ROTATE_TYPE, A0
+    LSL.W #8, D1
+    LSR.W #8, D1
+    LSR.W #6, D1    
+    CMP.B   #0, D1
+    BEQ     PRINT_BYTE
+    CMP.B   #1, D1
+    BEQ     PRINT_WORD
+    CMP.B   #2, D1
+    BEQ     PRINT_LONGWORD
+    BRA     INVALID_OPCODE
+ROTATE_TYPE
+    CMP.W #$4, D4
+    BEQ    REG_ROTATE
+    CMP.W #$0, D4
+    BEQ    NUM_ROTATE
+    BRA INVALID_OPCODE
+REG_ROTATE
+    JSR PRINT_TAB
+    MOVE.B #'D', (A2)+
+    ADD.W #$30, D3
+    MOVE.B D3, (A2)+
+    BRA ROTATE_DEST
+NUM_ROTATE
+    JSR PRINT_TAB
+    MOVE.B #'#', (A2)+
+    CMP.W #0, D3
+    BEQ EIGHT_R
+    ADD.W #$30, D3
+    MOVE.B D3, (A2)+    
+    BRA ROTATE_DEST
+EIGHT_R 
+    MOVE.B #'8', (A2)+
+    BRA ROTATE_DEST
+ROTATE_DEST
+    JSR PRINT_TAB
+    MOVE.B #'D', (A2)+
+    ADD.W #$30, D5
+    MOVE.B D5, (A2)+
+    BRA OUTPUT_RESULT
+ROTATE_MEM
+    CMP.W #$010, D4
+    BLT INVALID_OPCODE
+    JSR EA
+    BRA OUTPUT_RESULT
+
+
 *------------------------------------------------
 * start to print final result
 *------------------------------------------------
@@ -1025,23 +1134,160 @@ SmallLetter
         BLE Input_Error_Handler
         SUB.B   #$57,   D2    
         RTS
-PRINTBYTE
-    LEA MOVEA_VALUE,  A1        * print ".B"     
-    MOVE.B  #14, D0   
-    Trap    #15
-    JMP     (A0)    
-PRINTWORD
-    LEA MOVEA_VALUE,  A1        * print ".W"     
-    MOVE.B  #14, D0   
-    Trap    #15
-    JMP     (A0)
+EA
+    CMP.B #0, D4
+    BEQ PRINT_DATA_REG 
+       
+    CMP.B #1, D4 
+    BEQ PRINT_ADDRESS_REG
+
+    CMP.B  #2, D4
+    BEQ PRINT_PAREN_ADDRESS_REG
+    
+    CMP.B  #3, D4
+    BEQ PRINT_INCRE_ADDRESS_REG
+
+    CMP.W #$4, D4
+    BEQ PRINT_DECRE_ADDRESS_REG
+    
+    CMP.W #$7,D4
+    BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA
+
+PRINT_ABSOLUTE_IMMEDIATE_DATA                    
+    CMP.B #4, D5
+    BEQ PRINT_IMMEDIATE_DATA
+    
+    CMP.B #0, D5
+    BEQ PRINT_ABSOLUTE_ADDRESS
+    CMP.B #1, D5
+    BEQ PRINT_ABSOLUTE_ADDRESS
+    
+    BRA INVALID_OPCODE
 
 
-PRINTLONGWORD
-    LEA MOVEA_VALUE,  A1        * print ".L"     
-    MOVE.B  #14, D0   
-    Trap    #15    
-    JMP     (A0)
+PRINT_IMMEDIATE_DATA 
+    *if size is byte or word
+    CMP.B   #2, D1
+    BEQ     READLONGWORD
+    
+    *if size is byte or word
+    MOVE.W  (A5)+, (A2)+
+    RTS
+    
+    *if size is long word
+READLONGWORD    
+    MOVE.L  (A5)+, (A2)+
+    RTS
+    
+PRINT_ABSOLUTE_ADDRESS    
+    CMP.B #0, D5
+    BNE LONGWORD_ADDR
+    MOVE.W  (A5)+, (A2)+
+    RTS
+LONGWORD_ADDR
+    MOVE.L  (A5)+, (A2)+
+    RTS
+    
+PRINT_DATA_REG
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE 
+    MOVE.B  #'D',   (A2)+
+    ADD.W   #$30,    D5   
+    MOVE.B  D5,   (A2)+
+    RTS
+    
+PRINT_ADDRESS_REG
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5   
+    MOVE.B  D5,   (A2)+
+    RTS
+
+PRINT_PAREN_ADDRESS_REG
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,   (A2)+
+    MOVE.B  #')',   (A2)+
+    RTS
+    
+PRINT_INCRE_ADDRESS_REG
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,   (A2)+
+    MOVE.B  #')',   (A2)+
+    MOVE.B  #'+',   (A2)+
+    RTS
+    
+PRINT_DECRE_ADDRESS_REG
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,     (A2)+
+    MOVE.B  #')',   (A2)+
+    MOVE.B  D5,   (A2)+
+    RTS
+    
+    
+PRINT_WORD
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'W',   (A2)+
+    JMP     (A0)  
+PRINT_LONGWORD
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'L',   (A2)+
+    JMP     (A0) 
+PRINT_BYTE
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    JMP     (A0) 
+    
+PRINT_TAB
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    RTS
+
+
+PREPARE_DATA_REG
+    LSL   #8, D1 
+    ADDA #1, A5
+    MOVE.B (A5)+, D1            * full opcode word in D1
+    MOVE.W  D1, D2              * copy D1 to D2, for dest mode
+    MOVE.W  D1, D3              * copy D1 to D3, for dest register
+    MOVE.W  D1, D4              * copy D1 to D2, for src mode
+    MOVE.W  D1, D5              * copy D1 to D5, for src register
+  
+    LSL.W   #7,  D2   
+    LSR.W   #8,  D2                     
+    LSR.W   #5,  D2             * now D2 in binary: 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest mode
+
+    LSL.W   #4,  D3              
+    LSR.W   #8,  D3                     
+    LSR.W   #5,  D3             * now D3 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is dest register
+    
+    LSL.W   #8,  D4 
+    LSL.W   #2,  D4             
+    LSR.W   #8,  D4                     
+    LSR.W   #5,  D4             * now D4 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src mode
+    
+    LSL.W   #8,  D5  
+    LSL.W   #5,  D5
+    LSR.W   #8,  D5               
+    LSR.W   #8,  D5             * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
+    
+    RTS
+
 *_________________________Error Handle___________________________________      
 Input_Error_Handler
         BRA Invalid 
