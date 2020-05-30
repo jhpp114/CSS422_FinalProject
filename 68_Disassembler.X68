@@ -832,72 +832,229 @@ Register_111
 _CMP
 _AND
 
+*______________________ADD_____________________________________________
+_CLEAR_DN   *generalized subroutine for clearing data registers before next use
+    CLR.L   D0
+    CLR.L   D1  
+    CLR.L   D2      
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7
+    RTS
+
 _ADD
-    LEA	ADD_VALUE,	A1
-	MOVE.B	#14,	D0
-	TRAP	#15
-	lsl	#8,	D1
-	ADDA	#1,	A5
-	MOVE.B	(A5)+,	D1
+    JSR     _CLEAR_DN
+    MOVE.B  #'A',   (A2)+  
+    MOVE.B  #'D',   (A2)+   
+    MOVE.B  #'D',   (A2)+   
+    JSR     PREPARE_DATA_REG    *preps D2-D5
+                                *d2 is now bits 8-6
+                                *d3 is now bits 11-9
+                                *d4 is now bits 5-3
+                                *d5 is now bits 2-0
+    CMP.W   #0, D2
+    BEQ     _ADD_BYTE_EA_DN
+    CMP.W   #4, D2
+    BEQ     _ADD_BYTE_DN_EA
+    CMP.W   #1, D2
+    BEQ     _ADD_WORD_EA_DN
+    CMP.W   #5, D2
+    BEQ     _ADD_WORD_DN_EA
+    CMP.W   #2, D2
+    BEQ     _ADD_LONG_EA_DN
+    CMP.W   #6, D2
+    BEQ     _ADD_LONG_DN_EA
 
-	MOVE.W	D1,	D2
-	MOVE.W	D1,	D3
-	MOVE.W	D1,	D4
-	MOVE.W	D1,	D5
+_ADD_BYTE_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    JSR     _ADD_EA
+    MOVE.B  #',',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _DN
 
+_ADD_BYTE_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _DN
+    MOVE.B  #',',   (A2)+
+    JSR     _ADD_EA
 
-    LSL   #7,  D2   
-    LSR   #8,  D2                     
-    LSR   #5,  D2              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is op mode
-	BRA _ADD_OP_MODE
+_ADD_WORD_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'W',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    JSR     _ADD_EA
+    MOVE.B  #',',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _DN
 
-    LSL   #4,  D3              
-    LSR   #8,  D3                     
-    LSR   #5,  D3             * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is register
-    BRA _ADD_REG
+_ADD_WORD_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'W',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _DN
+    MOVE.B  #',',   (A2)+
+    JSR     _ADD_EA
 
-    LSL   #8,  D4 
-    LSL   #2,  D4             
-    LSR   #8,  D4                     
-    LSR   #5,  D4              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is ea mode
+_ADD_LONG_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'L',   (A2)+  
+    MOVE.B  #' ',   (A2)+  
+    MOVE.B  #' ',   (A2)+
+    JSR     _ADD_EA
+    MOVE.B  #',',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _DN
 
-    LSL   #8,  D5  
-    LSL   #5,  D5
-    LSR   #8,  D5               
-    LSR   #8,  D5              * 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is ea register
-    *BRA _ADD_
+_ADD_LONG_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'L',   (A2)+  
+    MOVE.B  #' ',   (A2)+  
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _N
+    MOVE.B  #',',   (A2)+
+    JSR     _ADD_EA
 
+_N  *subroutine for pushing n for dn or an based on d6
+    CMP.W   #0, D6
+    BEQ     _0
+    CMP.W   #1, D6
+    BEQ     _1
+    CMP.W   #2, D6
+    BEQ     _2
+    CMP.W   #3, D6
+    BEQ     _3
+    CMP.W   #4, D6
+    BEQ     _4
+    CMP.W   #5, D6
+    BEQ     _5
+    CMP.W   #6, D6
+    BEQ     _6
+    JSR     _7
+    RTS
 
-_ADD_OP_MODE:
-	CMP.W	#$0000, D2	
-	*BEQ	PRINTBYTE
-	CMP.W	#$0100, D2
-	*BEQ	PRINTBYTE
-	CMP.W	#$0001,	D2
-	*BEQ	PRINTWORD
-	CMP.W	#$0101,	D2
-	*BEQ	PRINTWORD
-	CMP.W	#$0010,	D2
-	*BEQ	PRINTLONG
-	CMP.W	#$0110,	D2
-	*BEQ	PRINTLONG
+_0
+    MOVE.B  #'0',   (A2)+
+    RTS
 
-_ADD_REG:
-	*Need to differentiate between OP modes here for register to be done properly
-	
-_ADD_EA
-	*CMP.W #$0000,	D4
-	*BEQ	_ADD_DN
-	*CMP.W	#$0001,	D4
-	*BEQ	_ADD_AN
-	*CMP.W	#$0010,	D4
-	*BEQ	_ADD_PRE_DECREMENT
-	*CMP.W	#$0011,	D4
-	*BEQ	_ADD_POST_INCREMENT
-	*CMP.W	#$0111, D4
-	*BEQ	_ADD_IMMEDIATE_DATA
+_1
+    MOVE.B  #'1',   (A2)+
+    RTS
 
-    
+_2
+    MOVE.B  #'2',   (A2)+
+    RTS
+
+_3
+    MOVE.B  #'3',   (A2)+
+    RTS
+
+_4
+    MOVE.B  #'4',   (A2)+
+    RTS
+
+_5
+    MOVE.B  #'5',   (A2)+
+    RTS
+
+_6
+    MOVE.B  #'6',   (A2)+
+    RTS
+
+_7
+    MOVE.B  #'7',   (A2)+
+    RTS
+
+_ADD_EA *d4 is mode, d5 is register
+    CMP.W   #0,     D4
+    BEQ     _ADD_EA_DN
+    CMP.W   #1,     D4
+    BEQ     _ADD_EA_AN
+    CMP.W   #2,     D4
+    BEQ     _ADD_EA_AN_ACTUAL
+    CMP.W   #3,     D4
+    BEQ     _ADD_EA_AN_POST_INCREMENT
+    CMP.W   #4,     D4
+    BEQ     _ADD_EA_AN_PRE_DECREMENT
+    CMP.W   #7,     D4
+    BEQ     _ADD_EA_DATA
+    RTS
+
+_ADD_EA_DN
+    MOVE.B  #'D',   (A2)+
+    RTS
+
+_ADD_EA_AN
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    RTS
+
+_ADD_EA_AN_ACTUAL
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    RTS
+
+_ADD_EA_AN_POST_INCREMENT
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    MOVE.B  #'+',   (A2)+
+    RTS
+
+_ADD_EA_AN_PRE_DECREMENT
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    RTS
+
+_ADD_EA_DATA
+    CMP.W   #0,     D5
+    BEQ     _ADD_EA_W
+    CMP.W   #1,     D5
+    BEQ     _ADD_EA_L
+    CMP.W   #4,     D5
+    BEQ     _ADD_EA_IMMEDIATE
+    RTS
+
+_ADD_EA_W
+    *TODO: data
+    RTS
+
+_ADD_EA_L
+    *TODO: data
+    RTS
+
+_ADD_EA_IMMEDIATE
+    MOVE.B  #'#',   (A2)+
+    *TODO: data
+    RTS
+*____________________END OF ADD________________________________________
 
 _LSL_ASR
 *bit 6 and 7 determines memory or register
