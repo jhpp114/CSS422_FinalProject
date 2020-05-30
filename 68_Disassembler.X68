@@ -8,7 +8,8 @@
 START:                  ; first instruction of program
 
 * Put program code here
-*_______Basic Print Out Welcome Message__________   
+*_______Basic Print Out Welcome Message__________  
+    MOVE.B  #0, ProgramCounter * added to test sub and end program  
     LEA Mes_Welcome,    A1  
     MOVE.B  #13,    D0  
     TRAP    #15 
@@ -89,6 +90,9 @@ Check_Input_Address
 *_______End of User Input Adr______________________________ 
 
 Disassemble_Loop
+        CMP.B   #25,    ProgramCounter  
+    BEQ Finish  
+    ADD.B   #1, ProgramCounter
 *   Clear Loop  
     CLR.L   D2 
     CLR.L   D3  
@@ -111,7 +115,7 @@ Disassemble_Loop
     MOVEQ   #13,    D0  
     TRAP    #15 
     *________Before BRA FINISH is for testin purpose_________
-    BRA Finish  *   Finish for now for testing purpose  
+    *BRA Finish  *   Finish for now for testing purpose  
     *________________________________________________________
     BRA Disassemble_Loop    
    
@@ -468,7 +472,19 @@ _Word_EA_DN
     MOVE.B  #'W',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-    BRA Calculate_EA_Mode     
+    JSR Calculate_EA_Mode
+    *   Apply Same logic with Byte_EA_DN  
+    MOVE.B  #',',    (A2)+   
+    MOVE.B  #'D',    (A2)+    
+    MOVE.W  D2, D4
+    ANDI.W  #$0E00, D4  
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4  
+    MOVE.W  D4, D5  
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists  
+    RTS 
       
 
 _Longword_EA_DN
@@ -479,7 +495,20 @@ _Longword_EA_DN
     MOVE.B  #'L',   (A2)+    
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
+    JSR Calculate_EA_Mode   
+    *   Apply Same logic with Byte_EA_DN    
+    MOVE.B  #',',   (A2)+   
+    MOVE.B  #'D',   (A2)+   
+    ANDI.W  #$0E00, D4  
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4  
+    MOVE.W  D4, D5  
+    ANDI.W  #$0007, D4 
+    JSR Register_Lists  
+    RTS
 
+*   sub.b x, Dx 
 _Byte_DN_EA
     MOVE.B  #'S',   (A2)+   
     MOVE.B  #'U',   (A2)+   
@@ -488,7 +517,24 @@ _Byte_DN_EA
     MOVE.B  #'B',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
-
+    MOVE.B  #'D',   (A2)+  
+    * Apply Opposite way compare to EA-DN  
+    MOVE.W  D2, D4   
+    *MOVE.W  D
+    ANDI.W  #$0E00, D4  
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4  
+    MOVE.W  D4, D5  
+    
+    ANDI.W  #$0007, D4 
+    MOVE.W  D2, D3  
+    ROL.W   #4, D3  
+    JSR Register_Lists  
+    MOVE.B  #',',    (A2)+      
+    JSR Calculate_EA_Mode
+    RTS 
+       
 _Word_DN_EA
     MOVE.B  #'S',   (A2)+   
     MOVE.B  #'U',   (A2)+   
@@ -497,6 +543,23 @@ _Word_DN_EA
     MOVE.B  #'W',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'D',   (A2)+  
+    * Apply Opposite way compare to EA-DN  
+    MOVE.W  D2, D4   
+    *MOVE.W  D
+    ANDI.W  #$0E00, D4  
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4  
+    MOVE.W  D4, D5  
+    
+    ANDI.W  #$0007, D4 
+    MOVE.W  D2, D3  
+    ROL.W   #4, D3  
+    JSR Register_Lists  
+    MOVE.B  #',',    (A2)+      
+    JSR Calculate_EA_Mode
+    RTS  
 
 _Longword_DN_EA
     MOVE.B  #'S',   (A2)+   
@@ -506,6 +569,24 @@ _Longword_DN_EA
     MOVE.B  #'L',   (A2)+   
     MOVE.B  #' ',   (A2)+   
     MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'D',   (A2)+  
+    * Apply Opposite way compare to EA-DN  
+    MOVE.W  D2, D4   
+    *MOVE.W  D
+    ANDI.W  #$0E00, D4  
+    LSR.W   #4, D4  
+    LSR.W   #4, D4  
+    LSR.W   #1, D4  
+    MOVE.W  D4, D5  
+    
+    ANDI.W  #$0007, D4 
+    MOVE.W  D2, D3  
+    ROL.W   #4, D3  
+    JSR Register_Lists  
+    MOVE.B  #',',    (A2)+      
+    JSR Calculate_EA_Mode
+    RTS  
+
 *____________________END OF SUB________________________________________
 
 * Basic idea
@@ -518,24 +599,58 @@ _Longword_DN_EA
 Calculate_EA_Mode   
     MOVE.W  D2, D3  * move data value to d3 for shifting purpose
     ROL.W   #4, D3  * Shift
-        ROL.W   #3, D3  
-        ROL.W   #3, D3  
-        ROL.W   #3, D3    
-        MOVE.W  D3, D4    
-        ANDI.W  #$0007, D3  * check last 3 bits which is mode   
-        
-        
-        JSR  EA_Lists  
+    ROL.W   #3, D3  
+    ROL.W   #3, D3  
+    ROL.W   #3, D3    
+    MOVE.W  D3, D4    
+    ANDI.W  #$0007, D3  * check last 3 bits which is mode   
+               
+    JSR  EA_Lists  
 
-        RTS * go bacc k to     _Byte_EA_DN 
+    RTS * go bacc k to     _Byte_EA_DN 
     *BRA Finish  
-
-
+*__________________________EA MODE Lists_________________________________________   
 EA_Lists
     CMP.W   #$000,  D3  
     BEQ EA_List_000 
+    
     CMP.W   #$001,  D3  
     BEQ EA_List_001 
+   
+    CMP.W   #$010,  D3  
+    BEQ EA_List_010 
+    
+    CMP.W   #$011,  D3  
+    BEQ EA_List_011 
+    
+    CMP.W   #$100,  D3  
+    BEQ EA_List_100 
+    
+    CMP.W   #$101,  D3  
+    BEQ EA_List_101 
+    
+    CMP.W   #$110,  D3  
+    BEQ EA_List_110 
+    
+    CMP.W   #$111,  D3  
+    BEQ EA_List_111 
+    
+    *------Direct access----  
+    CMP.W   #0, D3  
+    BEQ EA_List_000   
+   
+    CMP.W   #1, D3  
+    BEQ EA_List_001
+ 
+    CMP.W   #2, D3  
+    BEQ EA_List_010 
+    
+    CMP.W   #3, D3  
+    BEQ EA_List_011 
+    
+    CMP.W   #4, D3  
+    BEQ EA_List_100 
+    
     RTS *  RTS for now  
 
 EA_List_000 
@@ -547,8 +662,58 @@ EA_List_000
     ANDI.W  #$0007, D4  *   Check last 3 bits (register)    
     JSR Register_Lists  
     RTS 
+* Apply same logic as EA_List_000   
 EA_List_001
+    MOVE.B  #'A',   (A2)+   
+    ROL.W   #3, D4  
+    MOVE.W  D4, D3  
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists  
+    RTS 
+    
+EA_List_010
+    MOVE.B  #'(',   (A2)+   
+    MOVE.B  #'A',   (A2)+   
+    ROL.W   #3, D4  
+    MOVE.W  D4, D3  
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists  
+    MOVE.B  #')',   (A2)+   
+    RTS 
+    
+EA_List_011
+    MOVE.B  #'(',   (A2)+   
+    MOVE.B  #'A',   (A2)+   
+    ROL.W   #3, D4  
+    MOVE.W  D4, D3  
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists  
+    MOVE.B  #')',   (A2)+   
+    MOVE.B  #'+',   (A2)+   
+    RTS 
+    
+EA_List_100
+    MOVE.B  #'-',   (A2)+   
+    MOVE.B  #'(',   (A2)+   
+    MOVE.B  #'A',   (A2)+   
+    ROL.W   #3, D4  
+    MOVE.W  D4, D3  
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists  
+    MOVE.B  #')',   (A2)+   
+    RTS 
 
+*   I do not know How to handle this....
+*   Maybe just put invalid data?    
+EA_List_101
+    BRA Finish * End if for now  
+
+EA_List_110
+    BRA Finish  
+    
+
+EA_List_111    
+    
 *______________________ Lists of Registers________________________________________________  
 Register_Lists
     CMP.W   #$0000, D4  
@@ -572,10 +737,12 @@ Register_Lists
     BEQ   Register_001
     CMP.W   #2, D4  
     BEQ Register_010
+    CMP.W   #3, D4  
+    BEQ Register_011    
 Resgister_000
 
 Register_001    
-        MOVE.W  D3, D4  * get the value of memory again  
+    MOVE.W  D3, D4  * get the value of memory again  
     ROL.W   #8, D4  
     ROL.W   #5, D4  
     ANDI.W  #$0007, D4    
@@ -587,12 +754,12 @@ Register_001
 Just_One           
     MOVE.B  #'1',   (A2)+      
     RTS 
-
 Register_010
     MOVE.B  #'2',   (A2)+   
     RTS 
 Register_011
- 
+    MOVE.B  #'3',   (A2)+   
+    RTS 
 Register_100    
 
 Register_101
@@ -926,8 +1093,10 @@ BCC_Print   DC.B    'BCC',  0
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
+ProgramCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
