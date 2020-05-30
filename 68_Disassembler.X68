@@ -281,10 +281,44 @@ _MOVEM_LEA_JSR_RTS
     BRA Lea_Jsr_Rts 
     * Then it should be either lea, jsr, rts    
     
-     
+*_______________movem instruction____________________________________        
 _Movem  
-    BRA Finish  
-      
+    MOVE.B  #'M',   (A2)+   
+    MOVE.B  #'O',   (A2)+   
+    MOVE.B  #'V',   (A2)+   
+    MOVE.B  #'E',   (A2)+   
+    MOVE.B  #'M',   (A2)+   
+    MOVE.B  #'.',   (A2)+   
+    JSR _MovemSize  
+    CLR.L   D4  
+    MOVE.B  #' ',   (A2)+   
+    MOVE.W  D2, D4  
+    * check dr to decide wheather m->r or r -> m    
+    * basic logic
+    * xxxx xXxx, it is the second bit of the 2nd hex bit either 1 or 0  
+    ANDI.W  #$0400, D4  
+    CMP.W   #$0400, D4  
+    BEQ MemoryToRegister    
+    CMP.W   #$0000, D4  
+    BEQ RegisterToMemory    
+    
+MemoryToRegister
+
+RegisterToMemory
+    
+* basic logic
+* its always going to be either 11xx or 10xx    
+* the second bit is the one decide the size 
+* compare with 0040 and 0000 then its word 0100 then its lw 
+_MovemSize  
+    MOVE.W  D2, D4  * get data stored in address
+        ANDI.W  #$0040, D4   * prepare for compare
+    CMP.W  #$0040,  D4    
+    BEQ Movem_LongWord_Size 
+    MOVE.B  #'W',   (A2)+        
+Movem_LongWord_Size 
+    MOVE.B  #'L',   (A2)+   
+    RTS    
 Lea_Jsr_Rts
 
 *______________________END OF LEA JSR RTS___________________
