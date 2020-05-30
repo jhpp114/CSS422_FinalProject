@@ -259,8 +259,13 @@ _MOVE_MOVEA_DEST
     *CMP.B #$2F                  *size Longword
     *BLE   _MOVE_MOVEA_L
     
-    
+
+*______________________MOVEM_LEA_JSR_RTS____________________    
 _MOVEM_LEA_JSR_RTS
+
+
+*______________________END OF LEA JSR RTS___________________
+    
 *____________________BCC BLE BGT____________________________    
 _BXX    
 * clear out before use
@@ -429,7 +434,7 @@ _SUB
     BEQ _Byte_EA_DN     
     CMP.W   #$0040, D6  
     BEQ _Word_EA_DN 
-    CMP.W   #0080,  D6  
+    CMP.W   #$0080,  D6      
     BEQ _Longword_EA_DN 
     * to check DN - EA, since it is same but 1 infront, just put 01 instead of 00   
     CMP.W   #$0100, D6  
@@ -499,6 +504,7 @@ _Longword_EA_DN
     *   Apply Same logic with Byte_EA_DN    
     MOVE.B  #',',   (A2)+   
     MOVE.B  #'D',   (A2)+   
+    MOVE.W  D2, D4  
     ANDI.W  #$0E00, D4  
     LSR.W   #4, D4  
     LSR.W   #4, D4  
@@ -1096,6 +1102,7 @@ EndLocData  DS.L    1   *   Store ending address
 ProgramCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
