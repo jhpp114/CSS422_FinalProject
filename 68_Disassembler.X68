@@ -262,7 +262,30 @@ _MOVE_MOVEA_DEST
 
 *______________________MOVEM_LEA_JSR_RTS____________________    
 _MOVEM_LEA_JSR_RTS
-
+    * clear before use  
+    CLR.L   D0  
+    CLR.L   D2      
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7  
+    MOVE.W  (A5)+,  D2  * load full opcode  
+    MOVE.W  D2, D3  
+    * check second hex to determine if it is movem or others
+    * movem is 1100 or 1000 others are 1110, 1110, and 1111~ xxx1   
+    ANDI.W  #$0C00, D3  
+    CMP.W   #$0C00, D3  *
+    BEQ _Movem
+    CMP.W   #$0800, D3  
+    BEQ _Movem  
+    BRA Lea_Jsr_Rts 
+    * Then it should be either lea, jsr, rts    
+    
+     
+_Movem  
+    BRA Finish  
+      
+Lea_Jsr_Rts
 
 *______________________END OF LEA JSR RTS___________________
     
