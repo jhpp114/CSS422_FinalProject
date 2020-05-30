@@ -305,7 +305,10 @@ _Movem
 MemoryToRegister
 
 RegisterToMemory
-    
+    MOVE.W  (A6)+,  D4  *   get next value data 
+    CLR.L D0  * prepare for iteration Dn ... An or An... Dn       
+RegiToMemoryCalculate   
+                
 * basic logic
 * its always going to be either 11xx or 10xx    
 * the second bit is the one decide the size 
@@ -319,7 +322,24 @@ _MovemSize
 Movem_LongWord_Size 
     MOVE.B  #'L',   (A2)+   
     RTS    
+    
 Lea_Jsr_Rts
+    CLR.L   D3  
+    MOVE.W  D4, D3  * save for shift    
+    ROL.W   #$4,    D3  
+    MOVE.W  D3, D4  * save the shifted bits 
+    * shift it to obtain retgister on the last bits xxxx XXXx   
+    ROL.W   #3, D4  
+    ANDI.W  #$0007, D4  
+    * if it is not 7 then it should be LEA 7 then it should be JSR RTS  
+    CMP.W   #$0007, D4  
+    BEQ JSR_RTS 
+    CMP.W   #$0007, D4  
+    BNE LEA 
+    
+JSR_RTS 
+
+LEA 
 
 *______________________END OF LEA JSR RTS___________________
     
