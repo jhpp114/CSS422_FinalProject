@@ -233,7 +233,8 @@ MOVE_MOVEA_DEST
     BRA INVALID_OPCODE
 TO_EA_2
    JSR EA
-   BRA OUTPUT_RESULT
+   *BRA OUTPUT_RESULT
+   RTS  
 
     
 
@@ -869,13 +870,13 @@ _ADD
 
 _ADD_OP_MODE:
 	CMP.W	#$0000, D2	
-	BEQ	PRINTBYTE
+	*BEQ	PRINTBYTE
 	CMP.W	#$0100, D2
-	BEQ	PRINTBYTE
+	*BEQ	PRINTBYTE
 	CMP.W	#$0001,	D2
-	BEQ	PRINTWORD
+	*BEQ	PRINTWORD
 	CMP.W	#$0101,	D2
-	BEQ	PRINTWORD
+	*BEQ	PRINTWORD
 	CMP.W	#$0010,	D2
 	*BEQ	PRINTLONG
 	CMP.W	#$0110,	D2
@@ -967,7 +968,7 @@ SHIFT_MEM
     CMP.W #$010, D4
     BLT INVALID_OPCODE
     JSR EA
-    BRA OUTPUT_RESULT
+    *BRA OUTPUT_RESULT
 ASX
     MOVE.B #'A', (A2)+
     MOVE.B #'S', (A2)+
@@ -1402,7 +1403,7 @@ FOUR                    DC.W        '4',0
 FIVE                    DC.W        '5',0
 SIX                     DC.W        '6',0
 SEVEN                   DC.W        '7',0
-EIGHT                   DC.W        '8',0
+*EIGHT                   DC.W        '8',0
 NINE                    DC.W        '9',0
 A                       DC.W        'A',0
 B                       DC.W        'B',0
@@ -1425,6 +1426,7 @@ EndLocData  DS.L    1   *   Store ending address
 ProgramCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
