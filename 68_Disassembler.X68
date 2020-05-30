@@ -875,7 +875,7 @@ _ADD_BYTE_EA_DN
     MOVE.B  #',',   (A2)+
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
-    JSR     _DN
+    JSR     _N
 
 _ADD_BYTE_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -884,7 +884,7 @@ _ADD_BYTE_DN_EA
     MOVE.B  #' ',   (A2)+
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
-    JSR     _DN
+    JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
 
@@ -897,7 +897,7 @@ _ADD_WORD_EA_DN
     MOVE.B  #',',   (A2)+
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
-    JSR     _DN
+    JSR     _N
 
 _ADD_WORD_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -906,7 +906,7 @@ _ADD_WORD_DN_EA
     MOVE.B  #' ',   (A2)+
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
-    JSR     _DN
+    JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
 
@@ -919,7 +919,7 @@ _ADD_LONG_EA_DN
     MOVE.B  #',',   (A2)+
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
-    JSR     _DN
+    JSR     _N
 
 _ADD_LONG_DN_EA
     MOVE.B  #'.',   (A2)+
