@@ -1405,7 +1405,7 @@ PRINT_DECRE_ADDRESS_REG
     ADD.W   #$30,    D5
     MOVE.B  D5,     (A2)+
     MOVE.B  #')',   (A2)+
-    MOVE.B  D5,   (A2)+
+    *MOVE.B  D5,   (A2)+
     RTS
     
     
@@ -1596,6 +1596,7 @@ EndLocData  DS.L    1   *   Store ending address
 ProgramCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
