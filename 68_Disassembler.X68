@@ -315,9 +315,26 @@ Lea_Jsr_Rts
     ANDI.W  #$00C0, D4  
     CMP.W   #$00C0, D4  
     BEQ LEA 
-    BRA JSR_RTS     
-JSR_RTS 
+    CMP.W   #$0080, D4  
+    BEQ JSR 
+    CMP.W   #$0070, D4  
+    BEQ RTS 
+    *BRA JSR_RTS     
+JSR 
 
+*_________________RTS_______________________________
+RTS
+    CLR.L   D4  
+    MOVE.W  D2, D4  
+    CMP.W   #$4E75, D4  * just print RTS    
+    BEQ Print_RTS  
+    * not equal then simply throw error 
+Print_RTS   
+        MOVE.B  #'R',           (A2)+     
+        MOVE.B  #'T',           (A2)+      
+    MOVE.B #'S',    (A2)+   
+    RTS 
+*______________RTS End_____________________________        
 LEA 
     CLR.L   D3  
     CLR.L   D5  
