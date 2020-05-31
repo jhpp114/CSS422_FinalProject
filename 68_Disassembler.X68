@@ -192,9 +192,14 @@ _MOVE_MOVEA
 
 MOVE_MOVEA_SIZE
     LEA MOVE_MOVEA_SRC, A0
-    CMP.B   #3, D1
+    * fixing on the size    
+    MOVE.W  D1, D6  * saw that D6 was free      
+    ANDI.W  #$3000, D6    
+    *CMP.B   #3, D1
+    CMP.W   #$3000, D6  
     BEQ     PRINT_WORD
-    CMP.B   #2, D1
+    CMP.W   #$2000, D6  
+    *CMP.B   #2, D1
     BEQ     PRINT_LONGWORD
     JMP     PRINT_BYTE
     
@@ -1596,6 +1601,7 @@ EndLocData  DS.L    1   *   Store ending address
 ProgramCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
