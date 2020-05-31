@@ -259,11 +259,12 @@ _MOVEM_LEA_JSR_RTS
     MOVE.W  D2, D3  
     * check second hex to determine if it is movem or others
     * movem is 1100 or 1000 others are 1110, 1110, and 1111~ xxx1   
-    ANDI.W  #$0C00, D3  
-    CMP.W   #$0C00, D3  *
-    BEQ _Movem
-    CMP.W   #$0800, D3  
-    BEQ _Movem  
+    ANDI.W  #$0100, D3    
+    CMP.W   #$0100, D3  *   
+    BEQ Lea_Jsr_Rts 
+        *BEQ _Movem
+    *CMP.W   #$0800, D3  
+    *BEQ _Movem  
     BRA Lea_Jsr_Rts 
     * Then it should be either lea, jsr, rts    
     
@@ -301,7 +302,7 @@ RegiToMemoryCalculate
 * compare with 0040 and 0000 then its word 0100 then its lw 
 _MovemSize  
     MOVE.W  D2, D4  * get data stored in address
-        ANDI.W  #$0040, D4   * prepare for compare
+    ANDI.W  #$0040, D4   * prepare for compare
     CMP.W  #$0040,  D4    
     BEQ Movem_LongWord_Size 
     MOVE.B  #'W',   (A2)+        
@@ -310,23 +311,36 @@ Movem_LongWord_Size
     RTS    
     
 Lea_Jsr_Rts
-    CLR.L   D3  
-    MOVE.W  D4, D3  * save for shift    
-    ROL.W   #$4,    D3  
-    MOVE.W  D3, D4  * save the shifted bits 
-    * shift it to obtain retgister on the last bits xxxx XXXx   
-    ROL.W   #3, D4  
-    ANDI.W  #$0007, D4  
-    * if it is not 7 then it should be LEA 7 then it should be JSR RTS  
-    CMP.W   #$0007, D4  
-    BEQ JSR_RTS 
-    CMP.W   #$0007, D4  
-    BNE LEA 
-    
+    MOVE.W  D2, D4  
+    ANDI.W  #$00C0, D4  
+    CMP.W   #$00C0, D4  
+    BEQ LEA 
+    BRA JSR_RTS     
 JSR_RTS 
 
 LEA 
-
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D4  
+    MOVE.W  D2, D3  
+    ROR.W   #3, D3  * shift 3 to obtain src mode   
+    MOVE.W  D3, D5  
+    MOVE.W  D3, D4  * store in D4 to use function EA_LIST and REGISTER_LISTS    
+    ANDI.W  #$0007, D3        
+    CMP.W   #$0002, D3      
+    BEQ Print_LEA   
+Print_LEA   
+    MOVE.B  #'L',   (A2)+   
+    MOVE.B  #'E',   (A2)+   
+    MOVE.B  #'A',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    JSR EA_Lists    
+    MOVE.B  #',',   (A2)+    
+    CLR.L   D4    
+    MOVE.W  D2, D4    
+    ROL.L   #4, D4    
+    JSR EA_List_001 * go to A
+    RTS 
 *______________________END OF LEA JSR RTS___________________
     
 *____________________BCC BLE BGT____________________________    
@@ -801,15 +815,35 @@ Register_Lists
     BEQ Register_110    
     CMP.W   #$0111, D4  
     BEQ Register_111    
-    
+*____________ Direct Access____________________________
     CMP.W   #1, D4
     BEQ   Register_001
     CMP.W   #2, D4  
     BEQ Register_010
     CMP.W   #3, D4  
-    BEQ Register_011    
+    BEQ Register_011   
+    CMP.W   #4, D4  
+    BEQ Register_100    
+    CMP.W   #5, D4  
+    BEQ Register_101    
+    CMP.W   #6, D4  
+    BEQ Register_110    
+    CMP.W   #7, D4  
+    BEQ Register_111     
 Resgister_000
-
+    MOVE.W  D3, D4  
+    ROL.W   #8, D4  
+    ROL.W  #5, D4     
+    ANDI.W  #$0007, D4  
+    CMP.B   #$7,    D4  
+    BNE Just_Zero   
+    MOVE.B  #0, D4  
+    MOVE.B  #'$',   (A2)+   
+    MOVE.W  (A5)+,  D3  
+    *MOVE.B  #4,
+Just_Zero   
+        MOVE.B  #'0',    (A2)+  
+        RTS         
 Register_001    
     MOVE.W  D3, D4  * get the value of memory again  
     ROL.W   #8, D4  
@@ -832,10 +866,14 @@ Register_011
 Register_100    
 
 Register_101
-
+    MOVE.B  #'5',   (A2)+   
+    RTS 
 Register_110
-
+    MOVE.B  #'6',   (A2)+   
+    RTS 
 Register_111
+    MOVE.B  #'7',   (A2)+   
+    RTS 
 *______________________END OF SUB EA_____________________________________________
 _CMP
 _AND
