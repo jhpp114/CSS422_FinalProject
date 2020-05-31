@@ -321,7 +321,32 @@ Lea_Jsr_Rts
     BEQ RTS 
     *BRA JSR_RTS     
 JSR 
+    CLR.L   D4  
+    CLR.L   D3  
+    CLR.L   D5  
+    MOVE.W  D2, D4  * store for basic check validation    
+    ANDI.W  #$4E90, D4  
+    CMP.W   #$4E90, D4  
+    BEQ Print_JSR_010   
+    CLR.L   D4  * if not same then reset D4 and store value again for validation check  
+    MOVE.W  D2, D4  
+    ANDI.W  #$4EB8, D4  
+    CMP.W   #$4EB8, D4  
+    BEQ Print_JSR_111_000   
+    CLR.L   D4  * if not same then reste D4 and store value again for validation check  
+    MOVE.W  D2, D4  
+    ANDI.W  #$4EB9, D4  
+    CMP.W   #$4EB9, D4  
+    BEQ Print_JSR_111_001   
+    * rest its invalid  
+Print_JSR_010   
+    MOVE.B  #'J',   (A2)+   
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'R',   (A2)+   
+Print_JSR_111_000   
 
+Print_JSR_111_001   
+    
 *_________________RTS_______________________________
 RTS
     CLR.L   D4  
