@@ -90,9 +90,10 @@ Check_Input_Address
 *_______End of User Input Adr______________________________ 
 
 Disassemble_Loop
-        CMP.B   #25,    ProgramCounter  
+    CMP.B   #25,    ProgramCounter  
     BEQ Finish  
     ADD.B   #1, ProgramCounter
+    MOVE.B  #0, MoveInstructionCounter
 *   Clear Loop  
     CLR.L   D2 
     CLR.L   D3  
@@ -114,6 +115,8 @@ Disassemble_Loop
     LEA ProgramEnd, A1  
     MOVEQ   #13,    D0  
     TRAP    #15 
+    * 00000000000000000000000000000000000
+    MOVE.B  #0, MoveInstructionCounter  
     *________Before BRA FINISH is for testin purpose_________
     *BRA Finish  *   Finish for now for testing purpose  
     *________________________________________________________
@@ -1364,46 +1367,130 @@ LONGWORD_ADDR
     MOVE.L  (A5)+, (A2)+
     RTS
     
+
+*____________________PRINT_DATA_REG____________FIXED_________________________       
 PRINT_DATA_REG
-    CMP.B   #7, D5           * check n > 7
+    ADD.B  #1, MoveInstructionCounter      
+    CMP.B   #7, D5           * check n > 7 
     BGT     INVALID_OPCODE 
+    CMP.B   #2, MoveInstructionCounter  
+    BEQ PRINT_REAL_DATA_REG
+    CMP.B   #0, D5  
+    BEQ MovePrintNumFixer_DATA_REG   
+    BRA   PRINT_REAL_DATA_REG
+    
+PRINT_REAL_DATA_REG 
     MOVE.B  #'D',   (A2)+
     ADD.W   #$30,    D5   
     MOVE.B  D5,   (A2)+
+    CLR.L   D5 
+    CLR.L   D7   
     RTS
     
+MovePrintNumFixer_DATA_REG  
+    CLR.L   D5    
+    MOVE.W  D1, D7  
+    ANDI.W  #$0007, D7  
+    MOVE.W  D7, D5
+    CLR.L   D7  
+    BRA PRINT_REAL_DATA_REG
+
+*____________________PRINT_ADDRESS_REG_________FIXED________________________        
 PRINT_ADDRESS_REG
+    ADD.B  #1, MoveInstructionCounter
     CMP.B   #7, D5           * check n > 7
     BGT     INVALID_OPCODE
+    CMP.B   #2, MoveInstructionCounter  
+    BEQ PRINT_REAL_ADDRESS_REG
+    CMP.B   #0, D5  
+    BEQ MovePrintNumFixer_ADDRESS_REG   
+    BRA   PRINT_REAL_ADDRESS_REG
+    
+PRINT_REAL_ADDRESS_REG      
     MOVE.B  #'A',   (A2)+
     ADD.W   #$30,    D5   
     MOVE.B  D5,   (A2)+
+    CLR.L   D5
     RTS
+MovePrintNumFixer_ADDRESS_REG         
+    CLR.L   D5    
+    MOVE.W  D1, D7  
+    ANDI.W  #$0007, D7  
+    MOVE.W  D7, D5
+    CLR.L   D7
+    BRA PRINT_REAL_ADDRESS_REG 
 
+*______________________PAREN________FIXED_____________________________________
 PRINT_PAREN_ADDRESS_REG
+    ADD.B  #1, MoveInstructionCounter
     CMP.B   #7, D5           * check n > 7
     BGT     INVALID_OPCODE
+    CMP.B   #2, MoveInstructionCounter  
+    BEQ PRINT_REAL_PAREN_ADDRESS_REG
+    CMP.B   #0, D5  
+    BEQ MovePrintNumFixer_PAREN   
+    BRA   PRINT_REAL_PAREN_ADDRESS_REG
+    
+PRINT_REAL_PAREN_ADDRESS_REG    
     MOVE.B  #'(',   (A2)+
     MOVE.B  #'A',   (A2)+
     ADD.W   #$30,    D5
     MOVE.B  D5,   (A2)+
     MOVE.B  #')',   (A2)+
+    CLR.L   D5
     RTS
-    
+
+MovePrintNumFixer_PAREN      
+    CLR.L   D5    
+    MOVE.W  D1, D7  
+    ANDI.W  #$0007, D7  
+    MOVE.W  D7, D5
+    CLR.L   D7
+    BRA PRINT_REAL_PAREN_ADDRESS_REG
+
+*_________________________INCRE_______FIXED___________________________________    
 PRINT_INCRE_ADDRESS_REG
+    ADD.B  #1, MoveInstructionCounter
     CMP.B   #7, D5           * check n > 7
     BGT     INVALID_OPCODE
+    CMP.B   #2, MoveInstructionCounter  
+    BEQ PRINT_REAL_INCRE_ADDRESS_REG
+    CMP.B   #0, D5  
+    BEQ MovePrintNumFixer_DECRE   
+    BRA   PRINT_REAL_INCRE_ADDRESS_REG
+    
+PRINT_REAL_INCRE_ADDRESS_REG        
     MOVE.B  #'(',   (A2)+
     MOVE.B  #'A',   (A2)+
     ADD.W   #$30,    D5
     MOVE.B  D5,   (A2)+
     MOVE.B  #')',   (A2)+
     MOVE.B  #'+',   (A2)+
+    CLR.L   D5  
     RTS
     
+MovePrintNumFixer_INCRE     
+    CLR.L   D5    
+    MOVE.W  D1, D7  
+    ANDI.W  #$0007, D7  
+    MOVE.W  D7, D5
+    CLR.L   D7
+    BRA PRINT_REAL_INCRE_ADDRESS_REG     
+*___________________________DECRE____FIXED__________________________________    
 PRINT_DECRE_ADDRESS_REG
+    ADD.B  #1, MoveInstructionCounter
     CMP.B   #7, D5           * check n > 7
     BGT     INVALID_OPCODE
+    *_________ added code to fix___________
+    * Free register is D7, going to use D7  
+    CMP.B   #2, MoveInstructionCounter  
+    BEQ PRINT_REAL_DECRE_ADDRESS_REG 
+    CMP.B   #0, D5  
+    BEQ MovePrintNumFixer_DECRE   
+    BRA   PRINT_REAL_DECRE_ADDRESS_REG   
+    
+PRINT_REAL_DECRE_ADDRESS_REG    
+    *_________end of added code__________
     MOVE.B  #'-',   (A2)+
     MOVE.B  #'(',   (A2)+
     MOVE.B  #'A',   (A2)+
@@ -1411,9 +1498,19 @@ PRINT_DECRE_ADDRESS_REG
     MOVE.B  D5,     (A2)+
     MOVE.B  #')',   (A2)+
     *MOVE.B  D5,   (A2)+
+    CLR.L   D5  
     RTS
-    
-    
+*__________added code to fix_________________    
+MovePrintNumFixer_DECRE    
+    CLR.L   D5    
+    MOVE.W  D1, D7  
+    ANDI.W  #$0007, D7  
+    MOVE.W  D7, D5
+    CLR.L   D7
+    BRA PRINT_REAL_DECRE_ADDRESS_REG 
+*___________End of added code to fix_________
+*___________________________DECRE____FIXED__________________________________
+ 
 PRINT_WORD
     MOVE.B  #'.',   (A2)+
     MOVE.B  #'W',   (A2)+
@@ -1599,8 +1696,10 @@ UserInput   DS.L    1
 StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramCounter  DS.L    1   
+MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
