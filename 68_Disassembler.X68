@@ -865,6 +865,8 @@ _ADD
     BEQ     _ADD_LONG_EA_DN
     CMP.W   #6, D2
     BEQ     _ADD_LONG_DN_EA
+_ADD_FINISH
+    BRA     Finish
 
 _ADD_BYTE_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -876,6 +878,7 @@ _ADD_BYTE_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
+    BRA     _ADD_FINISH
 
 _ADD_BYTE_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -887,6 +890,7 @@ _ADD_BYTE_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
+    BRA     _ADD_FINISH
 
 _ADD_WORD_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -898,6 +902,7 @@ _ADD_WORD_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
+    BRA     _ADD_FINISH
 
 _ADD_WORD_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -909,6 +914,7 @@ _ADD_WORD_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
+    BRA     _ADD_FINISH
 
 _ADD_LONG_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -920,6 +926,7 @@ _ADD_LONG_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
+    BRA     _ADD_FINISH
 
 _ADD_LONG_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -931,8 +938,9 @@ _ADD_LONG_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
+    BRA     _ADD_FINISH
 
-_N  *subroutine for pushing n for dn or an based on d6
+_N  *subroutine for pushing n for dn or an based on d6 (3 bits that determine n should already be in d6)
     CMP.W   #0, D6
     BEQ     _0
     CMP.W   #1, D6
@@ -947,40 +955,41 @@ _N  *subroutine for pushing n for dn or an based on d6
     BEQ     _5
     CMP.W   #6, D6
     BEQ     _6
-    JSR     _7
+    BRA     _7  *if none of above must be 7
+_N_FINISH
     RTS
 
 _0
     MOVE.B  #'0',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _1
     MOVE.B  #'1',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _2
     MOVE.B  #'2',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _3
     MOVE.B  #'3',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _4
     MOVE.B  #'4',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _5
     MOVE.B  #'5',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _6
     MOVE.B  #'6',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _7
     MOVE.B  #'7',   (A2)+
-    RTS
+    BRA     _N_FINISH
 
 _ADD_EA *d4 is mode, d5 is register
     CMP.W   #0,     D4
@@ -995,17 +1004,18 @@ _ADD_EA *d4 is mode, d5 is register
     BEQ     _ADD_EA_AN_PRE_DECREMENT
     CMP.W   #7,     D4
     BEQ     _ADD_EA_DATA
+_ADD_EA_FINISH
     RTS
 
 _ADD_EA_DN
     MOVE.B  #'D',   (A2)+
-    RTS
-
+    BRA     _ADD_EA_N
 _ADD_EA_AN
     MOVE.B  #'A',   (A2)+
+_ADD_EA_N
     MOVE.L  D5,     D6
     JSR     _N
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_AN_ACTUAL
     MOVE.B  #'(',   (A2)+
@@ -1013,7 +1023,7 @@ _ADD_EA_AN_ACTUAL
     MOVE.L  D5,     D6
     JSR     _N
     MOVE.B  #')',   (A2)+
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_AN_POST_INCREMENT
     MOVE.B  #'(',   (A2)+
@@ -1022,7 +1032,7 @@ _ADD_EA_AN_POST_INCREMENT
     JSR     _N
     MOVE.B  #')',   (A2)+
     MOVE.B  #'+',   (A2)+
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_AN_PRE_DECREMENT
     MOVE.B  #'-',   (A2)+
@@ -1031,7 +1041,7 @@ _ADD_EA_AN_PRE_DECREMENT
     MOVE.L  D5,     D6
     JSR     _N
     MOVE.B  #')',   (A2)+
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_DATA
     CMP.W   #0,     D5
@@ -1040,20 +1050,23 @@ _ADD_EA_DATA
     BEQ     _ADD_EA_L
     CMP.W   #4,     D5
     BEQ     _ADD_EA_IMMEDIATE
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_W
+    MOVE.B  #'$',   (A2)+
     *TODO: data
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_L
+    MOVE.B  #'$',   (A2)+
     *TODO: data
-    RTS
+    BRA     _ADD_EA_FINISH
 
 _ADD_EA_IMMEDIATE
     MOVE.B  #'#',   (A2)+
+    MOVE.B  #'$',   (A2)+
     *TODO: data
-    RTS
+    BRA     _ADD_EA_FINISH
 *____________________END OF ADD________________________________________
 
 _LSL_ASR
