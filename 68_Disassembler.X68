@@ -909,7 +909,7 @@ Register_Lists
     BEQ Register_110    
     CMP.W   #7, D4  
     BEQ Register_111     
-Resgister_000
+Register_000
     MOVE.W  D3, D4  
     ROL.W   #8, D4  
     ROL.W  #5, D4     
