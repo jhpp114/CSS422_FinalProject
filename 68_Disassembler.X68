@@ -591,7 +591,6 @@ IS_LET
     RTS 
 
 *___________________END OF B brothers__________________________ 
-_OR
 
 *______________________SUB_____________________________________________
 _SUB
@@ -1040,7 +1039,7 @@ Register_111
 _CMP
 _AND
 
-*______________________ADD_____________________________________________
+*______________________GEN ROUTINES______________________________________________
 _CLEAR_DN   *generalized subroutine for clearing all data registers before next use
     CLR.L   D0
     CLR.L   D1  
@@ -1051,6 +1050,210 @@ _CLEAR_DN   *generalized subroutine for clearing all data registers before next 
     CLR.L   D7
     RTS
 
+_N  *subroutine for pushing n for dn or an based on d6
+    CMP.W   #0, D6
+    BEQ     _0
+    CMP.W   #1, D6
+    BEQ     _1
+    CMP.W   #2, D6
+    BEQ     _2
+    CMP.W   #3, D6
+    BEQ     _3
+    CMP.W   #4, D6
+    BEQ     _4
+    CMP.W   #5, D6
+    BEQ     _5
+    CMP.W   #6, D6
+    BEQ     _6
+    BRA     _7
+_N_END
+    RTS
+
+_0
+    MOVE.B  #'0',   (A2)+
+    BRA     _N_END
+
+_1
+    MOVE.B  #'1',   (A2)+
+    BRA     _N_END
+
+_2
+    MOVE.B  #'2',   (A2)+
+    BRA     _N_END
+
+_3
+    MOVE.B  #'3',   (A2)+
+    BRA     _N_END
+
+_4
+    MOVE.B  #'4',   (A2)+
+    BRA     _N_END
+
+_5
+    MOVE.B  #'5',   (A2)+
+    BRA     _N_END
+
+_6
+    MOVE.B  #'6',   (A2)+
+    BRA     _N_END
+
+_7
+    MOVE.B  #'7',   (A2)+
+    BRA     _N_END
+*____________________END OF GEN ROUTINES________________________________________
+
+*______________________OR______________________________________________
+_OR
+    MOVE.B  #' ',   (A2)+  
+    MOVE.B  #'O',   (A2)+   
+    MOVE.B  #'R',   (A2)+   
+    JSR     PREPARE_DATA_REG    *preps D2-D5
+                                *d2 is now bits 8-6
+                                *d3 is now bits 11-9
+                                *d4 is now bits 5-3
+                                *d5 is now bits 2-0
+    CMP.W   #0, D2
+    BEQ     _OR_BYTE_EA_DN
+    CMP.W   #4, D2
+    BEQ     _OR_BYTE_DN_EA
+    CMP.W   #1, D2
+    BEQ     _OR_WORD_EA_DN
+    CMP.W   #5, D2
+    BEQ     _OR_WORD_DN_EA
+    CMP.W   #2, D2
+    BEQ     _OR_LONG_EA_DN
+    CMP.W   #6, D2
+    BEQ     _OR_LONG_DN_EA
+_OR_END
+    RTS
+
+_OR_BYTE_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_EA_DN
+
+_OR_BYTE_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_DN_EA
+
+_OR_WORD_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'W',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_EA_DN
+
+_OR_WORD_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'W',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_DN_EA
+
+_OR_LONG_EA_DN
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'L',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_EA_DN
+
+_OR_LONG_DN_EA
+    MOVE.B  #'.',   (A2)+
+    MOVE.B  #'L',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    MOVE.B  #' ',   (A2)+
+    BRA     _OR_PARAM_DN_EA
+
+_OR_PARAM_EA_DN
+    JSR     _OR_EA
+    MOVE.B  #',',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _N
+    BRA     _OR_END
+
+_OR_PARAM_DN_EA
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D3,     D6
+    JSR     _N
+    MOVE.B  #',',   (A2)+
+    JSR     _OR_EA
+    BRA     _OR_END
+
+_OR_EA
+    CMP.W   #0,     D4
+    BEQ     _OR_EA_DN
+    CMP.W   #2,     D4
+    BEQ     _OR_EA_AN_ACTUAL
+    CMP.W   #3,     D4
+    BEQ     _OR_EA_AN_POST_INCREMENT
+    CMP.W   #4,     D4
+    BEQ     _OR_EA_AN_PRE_DECREMENT
+    CMP.W   #7,     D4
+    BEQ     _OR_EA_DATA
+    RTS
+
+_OR_EA_DN
+    MOVE.B  #'D',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    RTS
+
+_OR_EA_AN_ACTUAL
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    RTS
+
+_OR_EA_AN_POST_INCREMENT
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    MOVE.B  #'+',   (A2)+
+    RTS
+
+_OR_EA_AN_PRE_DECREMENT
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    MOVE.L  D5,     D6
+    JSR     _N
+    MOVE.B  #')',   (A2)+
+    RTS
+
+_OR_EA_DATA
+    CMP.W   #0,     D5
+    BEQ     _OR_EA_W
+    CMP.W   #1,     D5
+    BEQ     _OR_EA_L
+    CMP.W   #4,     D5
+    BEQ     _OR_EA_IMMEDIATE
+    RTS
+
+_OR_EA_W
+    *TODO: data
+    RTS
+
+_OR_EA_L
+    *TODO: data
+    RTS
+
+_OR_EA_IMMEDIATE
+    MOVE.B  #'#',   (A2)+
+    *TODO: data
+    RTS
+*____________________END OF OR________________________________________
+
+*______________________ADD_____________________________________________
 _ADD
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'D',   (A2)+   
@@ -1146,57 +1349,6 @@ _ADD_LONG_DN_EA
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
     BRA _ADD_END
-
-_N  *subroutine for pushing n for dn or an based on d6
-    CMP.W   #0, D6
-    BEQ     _0
-    CMP.W   #1, D6
-    BEQ     _1
-    CMP.W   #2, D6
-    BEQ     _2
-    CMP.W   #3, D6
-    BEQ     _3
-    CMP.W   #4, D6
-    BEQ     _4
-    CMP.W   #5, D6
-    BEQ     _5
-    CMP.W   #6, D6
-    BEQ     _6
-    BRA     _7
-_N_END
-    RTS
-
-_0
-    MOVE.B  #'0',   (A2)+
-    BRA     _N_END
-
-_1
-    MOVE.B  #'1',   (A2)+
-    BRA     _N_END
-
-_2
-    MOVE.B  #'2',   (A2)+
-    BRA     _N_END
-
-_3
-    MOVE.B  #'3',   (A2)+
-    BRA     _N_END
-
-_4
-    MOVE.B  #'4',   (A2)+
-    BRA     _N_END
-
-_5
-    MOVE.B  #'5',   (A2)+
-    BRA     _N_END
-
-_6
-    MOVE.B  #'6',   (A2)+
-    BRA     _N_END
-
-_7
-    MOVE.B  #'7',   (A2)+
-    BRA     _N_END
 
 _ADD_EA *d4 is mode, d5 is register
     CMP.W   #0,     D4
