@@ -325,26 +325,49 @@ JSR
     CLR.L   D3  
     CLR.L   D5  
     MOVE.W  D2, D4  * store for basic check validation    
-    ANDI.W  #$4E90, D4  
-    CMP.W   #$4E90, D4  
+    ANDI.W  #$00F0, D4    
+    CMP.W   #$0090, D4    
     BEQ Print_JSR_010   
     CLR.L   D4  * if not same then reset D4 and store value again for validation check  
     MOVE.W  D2, D4  
-    ANDI.W  #$4EB8, D4  
-    CMP.W   #$4EB8, D4  
+    ANDI.W  #$00FF, D4    
+    CMP.W   #$00B8, D4      
     BEQ Print_JSR_111_000   
     CLR.L   D4  * if not same then reste D4 and store value again for validation check  
     MOVE.W  D2, D4  
-    ANDI.W  #$4EB9, D4  
-    CMP.W   #$4EB9, D4  
+    ANDI.W  #$00FF, D4    
+    CMP.W   #$00BC, D4    
     BEQ Print_JSR_111_001   
     * rest its invalid  
 Print_JSR_010   
     MOVE.B  #'J',   (A2)+   
     MOVE.B  #'S',   (A2)+   
     MOVE.B  #'R',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    * shift 3 bits to check if it is 010    
+    CLR.L   D4 
+    CLR.L   D3   
+    MOVE.W  D2, D3  
+    ROR.W   #3, D3    
+    MOVE.W  D3, D4  
+    ANDI.W  #$0002, D4 * to check xxxx xxxx xx01 ?xxx, ? should be 0    
+    CMP.W  #$0002, D4       
+    BNE Finish * invalid    
+    CLR.L   D4  
+    MOVE.W  D2, D4  
+    ROR.W   #3, D4  
+    JSR EA_List_010  
+    RTS 
 Print_JSR_111_000   
-
+    MOVE.B  #'J',   (A2)+   
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'R',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    CLR.L   D4  
+    MOVE.W  D2, D4  
+    ROR.W   #3, D4  
+    JSR EA_List_111 
+    RTS 
 Print_JSR_111_001   
     
 *_________________RTS_______________________________
@@ -355,8 +378,8 @@ RTS
     BEQ Print_RTS  
     * not equal then simply throw error 
 Print_RTS   
-        MOVE.B  #'R',           (A2)+     
-        MOVE.B  #'T',           (A2)+      
+    MOVE.B  #'R',           (A2)+     
+    MOVE.B  #'T',           (A2)+      
     MOVE.B #'S',    (A2)+   
     RTS 
 *______________RTS End_____________________________        
@@ -838,7 +861,13 @@ EA_List_110
     
 
 EA_List_111    
+    ROL.W   #3, D4  
+    MOVE.W  D4, D3
+    ANDI.W  #$0007, D4  
+    JSR Register_Lists   
+    RTS  
     
+
 *______________________ Lists of Registers________________________________________________  
 Register_Lists
     CMP.W   #$0000, D4  
@@ -881,11 +910,33 @@ Resgister_000
     BNE Just_Zero   
     MOVE.B  #0, D4  
     MOVE.B  #'$',   (A2)+   
-    MOVE.W  (A5)+,  D3  
-    *MOVE.B  #4,
+    MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #4, D1   
+    JSR GetWord_Value   
+    RTS 
+    
+GetWord_Value
+    * get the first letter it is stored in D3   
+    ROL.W   #4, D3  
+    MOVE.L  D3, D7  
+    ANDI.L  #$0000000F, D7     
+    CMPI.B  #$09,   D7      
+    BLE Number_Convert_Word_Size      
+    ADDI.B  #$37,   D7 
+Letter_Convert_Word_Size    
+    ADDI.B  #1, D4  * increase counter  
+    MOVE.B  D7, (A2)+   * push the char into  end addres    
+    CMP.B  D1,  D4  * compare count 
+        BLT GetWord_Value   * less go back  
+        RTS 
+Number_Convert_Word_Size  
+    ADDI.B  #$30,   D7  * add 30 ascii stuffs   
+    BRA Letter_Convert_Word_Size    
+    
 Just_Zero   
-        MOVE.B  #'0',    (A2)+  
-        RTS         
+    MOVE.B  #'0',    (A2)+  
+    RTS         
 Register_001    
     MOVE.W  D3, D4  * get the value of memory again  
     ROL.W   #8, D4  
@@ -1779,6 +1830,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
