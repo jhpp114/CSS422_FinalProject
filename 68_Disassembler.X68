@@ -1003,7 +1003,7 @@ _CMP
 _AND
 
 *______________________ADD_____________________________________________
-_CLEAR_DN   *generalized subroutine for clearing data registers before next use
+_CLEAR_DN   *generalized subroutine for clearing all data registers before next use
     CLR.L   D0
     CLR.L   D1  
     CLR.L   D2      
@@ -1014,7 +1014,6 @@ _CLEAR_DN   *generalized subroutine for clearing data registers before next use
     RTS
 
 _ADD
-    JSR     _CLEAR_DN
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'D',   (A2)+   
     MOVE.B  #'D',   (A2)+   
@@ -1035,8 +1034,8 @@ _ADD
     BEQ     _ADD_LONG_EA_DN
     CMP.W   #6, D2
     BEQ     _ADD_LONG_DN_EA
-_ADD_FINISH
-    BRA     Finish
+_ADD_END
+    RTS
 
 _ADD_BYTE_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -1048,7 +1047,7 @@ _ADD_BYTE_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
 _ADD_BYTE_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -1060,7 +1059,7 @@ _ADD_BYTE_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
 _ADD_WORD_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -1072,7 +1071,7 @@ _ADD_WORD_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
 _ADD_WORD_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -1084,7 +1083,7 @@ _ADD_WORD_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
 _ADD_LONG_EA_DN
     MOVE.B  #'.',   (A2)+
@@ -1096,7 +1095,7 @@ _ADD_LONG_EA_DN
     MOVE.B  #'D',   (A2)+
     MOVE.L  D3,     D6
     JSR     _N
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
 _ADD_LONG_DN_EA
     MOVE.B  #'.',   (A2)+
@@ -1108,9 +1107,9 @@ _ADD_LONG_DN_EA
     JSR     _N
     MOVE.B  #',',   (A2)+
     JSR     _ADD_EA
-    BRA     _ADD_FINISH
+    BRA _ADD_END
 
-_N  *subroutine for pushing n for dn or an based on d6 (3 bits that determine n should already be in d6)
+_N  *subroutine for pushing n for dn or an based on d6
     CMP.W   #0, D6
     BEQ     _0
     CMP.W   #1, D6
@@ -1125,41 +1124,41 @@ _N  *subroutine for pushing n for dn or an based on d6 (3 bits that determine n 
     BEQ     _5
     CMP.W   #6, D6
     BEQ     _6
-    BRA     _7  *if none of above must be 7
-_N_FINISH
+    BRA     _7
+_N_END
     RTS
 
 _0
     MOVE.B  #'0',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _1
     MOVE.B  #'1',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _2
     MOVE.B  #'2',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _3
     MOVE.B  #'3',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _4
     MOVE.B  #'4',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _5
     MOVE.B  #'5',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _6
     MOVE.B  #'6',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _7
     MOVE.B  #'7',   (A2)+
-    BRA     _N_FINISH
+    BRA     _N_END
 
 _ADD_EA *d4 is mode, d5 is register
     CMP.W   #0,     D4
@@ -1174,7 +1173,6 @@ _ADD_EA *d4 is mode, d5 is register
     BEQ     _ADD_EA_AN_PRE_DECREMENT
     CMP.W   #7,     D4
     BEQ     _ADD_EA_DATA
-_ADD_EA_FINISH
     RTS
 
 _ADD_EA_DN
@@ -1185,7 +1183,7 @@ _ADD_EA_AN
 _ADD_EA_N
     MOVE.L  D5,     D6
     JSR     _N
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_AN_ACTUAL
     MOVE.B  #'(',   (A2)+
@@ -1193,7 +1191,7 @@ _ADD_EA_AN_ACTUAL
     MOVE.L  D5,     D6
     JSR     _N
     MOVE.B  #')',   (A2)+
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_AN_POST_INCREMENT
     MOVE.B  #'(',   (A2)+
@@ -1202,7 +1200,7 @@ _ADD_EA_AN_POST_INCREMENT
     JSR     _N
     MOVE.B  #')',   (A2)+
     MOVE.B  #'+',   (A2)+
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_AN_PRE_DECREMENT
     MOVE.B  #'-',   (A2)+
@@ -1211,7 +1209,7 @@ _ADD_EA_AN_PRE_DECREMENT
     MOVE.L  D5,     D6
     JSR     _N
     MOVE.B  #')',   (A2)+
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_DATA
     CMP.W   #0,     D5
@@ -1220,23 +1218,20 @@ _ADD_EA_DATA
     BEQ     _ADD_EA_L
     CMP.W   #4,     D5
     BEQ     _ADD_EA_IMMEDIATE
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_W
-    MOVE.B  #'$',   (A2)+
     *TODO: data
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_L
-    MOVE.B  #'$',   (A2)+
     *TODO: data
-    BRA     _ADD_EA_FINISH
+    RTS
 
 _ADD_EA_IMMEDIATE
     MOVE.B  #'#',   (A2)+
-    MOVE.B  #'$',   (A2)+
     *TODO: data
-    BRA     _ADD_EA_FINISH
+    RTS
 *____________________END OF ADD________________________________________
 
 _LSL_ASR
