@@ -270,6 +270,7 @@ _MOVEM_LEA_JSR_RTS
     
 *_______________movem instruction____________________________________        
 _Movem  
+    * so i need to catch the case before it store movem 
     MOVE.B  #'M',   (A2)+   
     MOVE.B  #'O',   (A2)+   
     MOVE.B  #'V',   (A2)+   
@@ -308,12 +309,18 @@ RegisterToMemory
     
 RegisterToMemory_NextWord     
     MOVE.W  (A5)+,  D4  
+    CLR.L   D3
+    MOVE.W  D4, D3 
 RegiToMemoryCalculate   
     * make an counter at d1 
-    * so i need away to read 1 each time    
-    CLR.L   D3  
-    MOVE.W  D4, D3  
-    ANDI.W        
+    * so i need away to read 1 each time     
+    CMP.B   #8, D1  * check if it has to be reset to 0   
+    ROL.W   #1, D3  * shift 1 bit to the last
+    BCC    Increase_Counter 
+    JSR Register_List_Mask_An   
+Increase_Counter    
+        ADD.B   #1, D0  * check if this is 16   
+        ADD.B   #1, D1  * reset this to 0 when it hits count 8 D0 ... D7 and A0 ... A7  
 Register_List_Mask_An   
     MOVE.B  #'A',   (A2)+   
   
@@ -1880,6 +1887,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
