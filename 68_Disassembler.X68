@@ -336,7 +336,7 @@ JSR
     CLR.L   D4  * if not same then reste D4 and store value again for validation check  
     MOVE.W  D2, D4  
     ANDI.W  #$00FF, D4    
-    CMP.W   #$00BC, D4    
+    CMP.W   #$00B9, D4      
     BEQ Print_JSR_111_001   
     * rest its invalid  
 Print_JSR_010   
@@ -369,7 +369,15 @@ Print_JSR_111_000
     JSR EA_List_111 
     RTS 
 Print_JSR_111_001   
-    
+    MOVE.B  #'J',   (A2)+   
+    MOVE.B  #'S',   (A2)+   
+    MOVE.B  #'R',   (A2)+   
+    MOVE.B  #' ',   (A2)+   
+    CLR.L   D4
+    MOVE.W  D2, D4  
+    ROR.W   #3, D4  
+    JSR EA_List_111 
+    RTS 
 *_________________RTS_______________________________
 RTS
     CLR.L   D4  
@@ -925,7 +933,7 @@ GetWord_Value
     BLE Number_Convert_Word_Size      
     ADDI.B  #$37,   D7 
 Letter_Convert_Word_Size    
-    ADDI.B  #1, D4  * increase counter  
+    ADDI.B  #1, D4  * increase counter    
     MOVE.B  D7, (A2)+   * push the char into  end addres    
     CMP.B  D1,  D4  * compare count 
         BLT GetWord_Value   * less go back  
@@ -936,7 +944,8 @@ Number_Convert_Word_Size
     
 Just_Zero   
     MOVE.B  #'0',    (A2)+  
-    RTS         
+    RTS   
+      
 Register_001    
     MOVE.W  D3, D4  * get the value of memory again  
     ROL.W   #8, D4  
@@ -946,10 +955,32 @@ Register_001
     BNE Just_One
     MOVE.B  #0, D4  
     MOVE.B  #'$',   (A2)+   
-    *MOVE.W  
+    MOVE.L  (A5)+,  D3  *   increase long word size address 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #8, D1  
+    JSR GetLongword_Value   
+    RTS  
+GetLongword_Value
+    ROL.L   #4, D3    
+    MOVE.L  D3, D7  
+    ANDI.L  #$0000000F, D7  
+    CMPI.B  #$09,   D7  
+    BLE Number_Convert_Longword_Size    
+    ADDI.B  #$37,   D7  
+Letter_Convert_Longword_Size    
+    ADDI.B  #1, D4  
+    MOVE.B  D7, (A2)+   
+    CMP.B   D1, D4  
+    BLT GetLongword_Value   
+    RTS 
+Number_Convert_Longword_Size    
+    ADDI.B  #$30,   D7  
+    BRA Letter_Convert_Longword_Size    
+
 Just_One           
     MOVE.B  #'1',   (A2)+      
     RTS 
+    
 Register_010
     MOVE.B  #'2',   (A2)+   
     RTS 
@@ -1356,7 +1387,9 @@ Convert_Hex_to_Ascii
     CMP.B   D5, D6  * compare the couter
     BNE Smaller *   Set counter to read 4
     JSR Bigger
+    TRAP #15
     RTS  
+        
 Bigger
     MOVE.B  #6, D0  
     MOVE.B  #32,    D1  
