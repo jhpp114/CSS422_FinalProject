@@ -292,9 +292,31 @@ _Movem
 MemoryToRegister
 
 RegisterToMemory
-    MOVE.W  (A6)+,  D4  *   get next value data 
-    CLR.L D0  * prepare for iteration Dn ... An or An... Dn       
+        * get next value data 
+    CLR.L D0  * prepare for iteration Dn ... An or An... Dn     
+    CLR.L   D1 
+    * register to memory 010, 110, 111, 111 works else error
+    MOVE.W  D2, D4    
+    ANDI.W  #$0038, D4  
+    CMP.W   #$0010, D4  
+    BEQ RegisterToMemory_NextWord
+    CMP.W   #$0038, D4  
+    BEQ RegisterToMemory_NextWord
+    CMP.W   #$0039, D4  
+    BEQ RegisterToMemory_NextWord
+    * else I assume all Error   
+    
+RegisterToMemory_NextWord     
+    MOVE.W  (A5)+,  D4  
 RegiToMemoryCalculate   
+    * make an counter at d1 
+    * so i need away to read 1 each time    
+    CLR.L   D3  
+    MOVE.W  D4, D3  
+    ANDI.W        
+Register_List_Mask_An   
+    MOVE.B  #'A',   (A2)+   
+  
                 
 * basic logic
 * its always going to be either 11xx or 10xx    
@@ -1858,6 +1880,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
