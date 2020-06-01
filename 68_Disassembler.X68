@@ -188,7 +188,10 @@ _MOVE_MOVEA
     MOVE.B  #'V',   (A2)+  
     MOVE.B  #'E',   (A2)+ 
     JSR PREPARE_DATA_REG
-    
+    CLR.L D0
+    MOVE.L D1, D0
+    LSR.W #8, D0
+    LSR.W #4, D0
     CMP.B #1,   D2
     BNE MOVE_MOVEA_SIZE
     MOVE.B  #'A',   (A2)+
@@ -204,10 +207,13 @@ MOVE_MOVEA_SIZE
     CMP.W   #$2000, D6  
     *CMP.B   #2, D1
     BEQ     PRINT_LONGWORD
+    CMP.B #1,   D2
+    BEQ INVALID_OPCODE
     JMP     PRINT_BYTE
     
 MOVE_MOVEA_SRC
     JSR PRINT_TAB
+    MOVE.L D3, D6
     CMP.W #$4,D4
     BLE TO_EA
 IS_SEVEN
@@ -221,9 +227,12 @@ TO_EA
 MOVE_MOVEA_DEST
     JSR PRINT_TAB
     MOVE.L D2, D4      
-    MOVE.L D3, D5
+    MOVE.L D6, D5
     
     CMP.B #$000, D4
+    BEQ TO_EA_2 
+    	    
+    CMP.B #$1, D4
     BEQ TO_EA_2 
        
     CMP.B  #$2, D4
@@ -1266,18 +1275,31 @@ _ADD_EA_IMMEDIATE
 _LSL_ASR
 *bit 6 and 7 determines memory or register
     JSR PREPARE_DATA_REG
-    CMP.B #$01, D4
+     CMP.W #7, D2
+    BEQ CHECKD3
+    CMP.W #3, D2
+    BEQ CHECKD3
+    
+    CMP.B #$1, D4
     BEQ LSX
-    CMP.B #$00, D4
+    CMP.B #$0, D4
     BEQ ASX
+    CMP.B #$5, D4
+    BEQ LSX
+    CMP.B #$4, D4
+    BEQ ASX
+    BRA INVALID_OPCODE
+CHECKD3
+    CMP.B #0, D3
+    BEQ ASX
+    CMP.B #1, D3
+    BEQ LSX
     BRA INVALID_OPCODE  
-
 LSX
     MOVE.B #'L', (A2)+
     MOVE.B #'S', (A2)+
     CMP.W #4, D2
     BGE LEFT_SHIFT
-
 RIGHT_SHIFT
     MOVE.B #'R', (A2)+
     BRA DETERMINE_SHIFT_TYPE    
@@ -1285,6 +1307,8 @@ LEFT_SHIFT
     MOVE.B #'L', (A2)+
 DETERMINE_SHIFT_TYPE
     CMP.B #3, D2
+    BEQ SHIFT_MEM
+    CMP.B #7, D2
     BEQ SHIFT_MEM
     
 SHIFT_REG
@@ -1314,6 +1338,7 @@ REG_SHIFT
 NUM_SHIFT
     JSR PRINT_TAB
     MOVE.B #'#', (A2)+
+    MOVE.B #'$', (A2)+
     CMP.W #0, D3
     BEQ EIGHT
     ADD.W #$30, D3
@@ -1327,18 +1352,20 @@ SHIFT_DEST
     MOVE.B #'D', (A2)+
     ADD.W #$30, D5
     MOVE.B D5, (A2)+
-    BRA OUTPUT_RESULT
+    RTS
 SHIFT_MEM
-    CMP.W #$010, D4
+    MOVE.B #'.', (A2)+
+    MOVE.B #'W', (A2)+
+    JSR PRINT_TAB
+    CMP.W #$2, D4
     BLT INVALID_OPCODE
-    JSR EA
-    *BRA OUTPUT_RESULT
+    JSR EA1
+    RTS
 ASX
     MOVE.B #'A', (A2)+
     MOVE.B #'S', (A2)+
     CMP.W #4, D2
     BGE LEFT_ROTATE
-
 RIGHT_ROTATE
     MOVE.B #'R', (A2)+
     BRA DETERMINE_ROTATE_TYPE    
@@ -1346,6 +1373,8 @@ LEFT_ROTATE
     MOVE.B #'L', (A2)+
 DETERMINE_ROTATE_TYPE
     CMP.B #3, D2
+    BEQ ROTATE_MEM
+     CMP.B #7, D2
     BEQ ROTATE_MEM
     
 ROTATE_REG
@@ -1375,6 +1404,7 @@ REG_ROTATE
 NUM_ROTATE
     JSR PRINT_TAB
     MOVE.B #'#', (A2)+
+    MOVE.B #'$', (A2)+
     CMP.W #0, D3
     BEQ EIGHT_R
     ADD.W #$30, D3
@@ -1388,14 +1418,15 @@ ROTATE_DEST
     MOVE.B #'D', (A2)+
     ADD.W #$30, D5
     MOVE.B D5, (A2)+
-    BRA OUTPUT_RESULT
+    RTS
 ROTATE_MEM
-    CMP.W #$010, D4
+    MOVE.B #'.', (A2)+
+    MOVE.B #'W', (A2)+
+    JSR PRINT_TAB 
+    CMP.W #$2, D4
     BLT INVALID_OPCODE
-    JSR EA
-    BRA OUTPUT_RESULT
-
-
+    JSR EA1
+    RTS
 *------------------------------------------------
 * start to print final result
 *------------------------------------------------
@@ -1503,22 +1534,22 @@ SmallLetter
         RTS
 EA
     CMP.B #0, D4
-    BEQ PRINT_DATA_REG 
+    BEQ PRINT_DATA_REG1 
        
     CMP.B #1, D4 
-    BEQ PRINT_ADDRESS_REG
+    BEQ PRINT_ADDRESS_REG1
 
     CMP.B  #2, D4
-    BEQ PRINT_PAREN_ADDRESS_REG
+    BEQ PRINT_PAREN_ADDRESS_REG1
     
     CMP.B  #3, D4
-    BEQ PRINT_INCRE_ADDRESS_REG
+    BEQ PRINT_INCRE_ADDRESS_REG1
 
     CMP.W #$4, D4
-    BEQ PRINT_DECRE_ADDRESS_REG
+    BEQ PRINT_DECRE_ADDRESS_REG1
     
     CMP.W #$7,D4
-    BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA
+    BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA1
 
 PRINT_ABSOLUTE_IMMEDIATE_DATA                    
     CMP.B #4, D5
@@ -1644,7 +1675,7 @@ PRINT_INCRE_ADDRESS_REG
     CMP.B   #2, MoveInstructionCounter  
     BEQ PRINT_REAL_INCRE_ADDRESS_REG
     CMP.B   #0, D5  
-    BEQ MovePrintNumFixer_DECRE   
+    BEQ MovePrintNumFixer_INCRE   
     BRA   PRINT_REAL_INCRE_ADDRESS_REG
     
 PRINT_REAL_INCRE_ADDRESS_REG        
@@ -1745,8 +1776,127 @@ PREPARE_DATA_REG
     LSL.W   #8,  D5  
     LSL.W   #5,  D5
     LSR.W   #8,  D5               
-    LSR.W   #8,  D5             * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
+    LSR.W   #5,  D5             * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
     
+    RTS
+*--------------original code
+EA1
+    CMP.B #0, D4
+    BEQ PRINT_DATA_REG1 
+    CMP.B #1, D4 
+    BEQ PRINT_ADDRESS_REG1
+    CMP.B  #2, D4
+    BEQ PRINT_PAREN_ADDRESS_REG1
+    CMP.B  #3, D4
+    BEQ PRINT_INCRE_ADDRESS_REG1
+    CMP.W #$4, D4
+    BEQ PRINT_DECRE_ADDRESS_REG1
+    CMP.W #$7,D4
+    BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA1
+PRINT_ABSOLUTE_IMMEDIATE_DATA1                    
+    CMP.B #4, D5
+    BEQ PRINT_IMMEDIATE_DATA1
+    CMP.B #0, D5
+    BEQ PRINT_ABSOLUTE_ADDRESS1
+    CMP.B #1, D5
+    BEQ PRINT_ABSOLUTE_ADDRESS1
+    BRA INVALID_OPCODE
+PRINT_IMMEDIATE_DATA1
+    *if size is byte or word
+    CMP.B   #2, D0
+    BEQ     READLONGWORD1
+    *if size is byte or word
+    CLR.L D3
+    CLR.L D4
+    MOVE.B  #0, D4  
+    MOVE.B  #'#',   (A2)+   
+    MOVE.B  #'$',   (A2)+   
+    MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #4, D1     
+    JSR GetWord_Value 
+    RTS
+
+    *if size is long word
+READLONGWORD1    
+    MOVE.B  #0, D4  
+    MOVE.B  #'#',   (A2)+   
+
+    MOVE.B  #'$',   (A2)+   
+    MOVE.L  (A5)+,  D3  *   increase long word size address 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #8, D1  
+   
+    JSR GetLongword_Value   
+    RTS
+PRINT_ABSOLUTE_ADDRESS1
+    
+    CMP.B #0, D5
+    BEQ WORD_ADDR1
+    CMP.B #1, D5
+    BEQ LONGWORD_ADDR1
+    BRA INVALID_OPCODE
+LONGWORD_ADDR1
+    MOVE.B  #0, D4  
+    MOVE.B  #'$',   (A2)+   
+    MOVE.L  (A5)+,  D3  *   increase long word size address 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #8, D1  
+   
+    JSR GetLongword_Value   
+    RTS
+WORD_ADDR1
+    CLR.L D3
+    CLR.L D4
+    MOVE.B  #0, D4  
+    MOVE.B  #'$',   (A2)+   
+    MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #4, D1     
+    JSR GetWord_Value 
+    RTS
+PRINT_DATA_REG1
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE 
+    MOVE.B  #'D',   (A2)+
+    ADD.W   #$30,    D5   
+    MOVE.B  D5,   (A2)+
+    RTS
+PRINT_ADDRESS_REG1
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5   
+    MOVE.B  D5,   (A2)+
+    RTS
+PRINT_PAREN_ADDRESS_REG1
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,   (A2)+
+    MOVE.B  #')',   (A2)+
+    RTS
+PRINT_INCRE_ADDRESS_REG1
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,   (A2)+
+    MOVE.B  #')',   (A2)+
+    MOVE.B  #'+',   (A2)+
+    RTS
+PRINT_DECRE_ADDRESS_REG1
+    CMP.B   #7, D5           * check n > 7
+    BGT     INVALID_OPCODE
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'(',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W   #$30,    D5
+    MOVE.B  D5,     (A2)+
+    MOVE.B  #')',   (A2)+
     RTS
 
 *_________________________Error Handle___________________________________      
@@ -1887,29 +2037,3 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
