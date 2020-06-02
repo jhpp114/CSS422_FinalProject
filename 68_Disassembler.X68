@@ -741,7 +741,21 @@ BXX_DISPLACEMENT_WORD_JUST_PRINT
     
 BXX_DISPLACEMENT_LONG   
     * will be implemented
-
+    MOVE.B  #32,    D3  * set up counter for longword 32 bit    
+    MOVE.L  (A5)+,  D6  * store next longword size memory value 
+    MOVE.L  D6, D1  * copy  next longword to d1 to test 
+    ANDI.L  #$80000000, D1  *   Set up to test if it has to go back  
+    CMP.L   #$80000000,    D1  
+    BNE BXX_DISPLACEMENT_LONG_JUST_PRINT   * Not equal then just print
+BXX_Complement_Long     
+    ROL.W   #1, D6  *   check word size bit 
+    BCS BXX_Last_Ones_Convert   *   convert 1s  
+    ADDI.B  #1, D6  *   these are 0s    
+    BRA BXX_TwosComplement_Cal      
+ 
+BXX_DISPLACEMENT_LONG_JUST_PRINT    
+        ADD.L   D6, D5  *   just print (Add d6 to current adr)  
+        BRA Display_BXX  
 BXX_TwosComplement_Last_Add   
     ADDI.W  #$1,    D6  *   Add 1 at the end to the bit   
     SUB.L   D6, D5  
@@ -2398,3 +2412,8 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
