@@ -88,10 +88,14 @@ Check_Input_Address
   
     
 *_______End of User Input Adr______________________________ 
+CheckProgramCounter 
+    CMP.B   #25,    ProgramCounter  * check program counter 
+    BLE Disassemble_Loop    
+    JSR ToContinueProgram 
 
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
-    BEQ Finish  
+    *BEQ Finish  
     ADD.B   #1, ProgramCounter
     MOVE.B  #0, MoveInstructionCounter
 *   Clear Loop  
@@ -120,7 +124,8 @@ Disassemble_Loop
     *________Before BRA FINISH is for testin purpose_________
     *BRA Finish  *   Finish for now for testing purpose  
     *________________________________________________________
-    BRA Disassemble_Loop    
+    *BRA Disassemble_Loop    
+    BRA CheckProgramCounter
    
 *_______Start of reading machine code______________________
 
@@ -2082,7 +2087,29 @@ Invalid_Adr_Not_Even
         TRAP    #15 
         BRA Get_Input_Start_ADR 
     
-
+*__________________________Keep Decode after 25_________________________________    
+ToContinueProgram
+        LEA Mes_Continue_Read,  A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        *_________ get user input___________    
+        MOVE.B  #5, D0  * char at d1    
+        TRAP    #15 
+        CMP.B   #$20,   D1   * if it is space   
+        BEQ ContinueProgram  
+        CMP.B   #$51,   D1  * if it is Q    
+        BEQ END_Program 
+        CMP.B   #$71,   D1  * if it is q    
+        BEQ END_Program 
+        BRA ToContinueProgram   
+ContinueProgram 
+        MOVE.B  #0, ProgramCounter
+        RTS
+END_Program
+        LEA Mes_TerminateProgram,   A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        BRA Finish  
     
 Finish  SIMHALT             ; halt simulator
         
@@ -2102,6 +2129,9 @@ Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0
             
 Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
+
+Mes_Continue_Read   DC.B    'Please hit Space to conitnue read. Q or q to quit program', CR, LF, 0  
+Mes_TerminateProgram DC.B   'Ending the Program... Bye', CR, LF, 0  
 
 RTS_VALUE               DC.W        'RTS',0     * Requested
 JSR_VALUE               DC.W        'JSR',0     * Requested
@@ -2189,3 +2219,8 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
