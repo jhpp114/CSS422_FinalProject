@@ -92,10 +92,9 @@ CheckProgramCounter
     CMP.B   #25,    ProgramCounter  * check program counter 
     BLE Disassemble_Loop    
     JSR ToContinueProgram 
-
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
-    *BEQ Finish  
+    BEQ Finish  
     ADD.B   #1, ProgramCounter
     MOVE.B  #0, MoveInstructionCounter
 *   Clear Loop  
@@ -124,9 +123,8 @@ Disassemble_Loop
     *________Before BRA FINISH is for testin purpose_________
     *BRA Finish  *   Finish for now for testing purpose  
     *________________________________________________________
-    *BRA Disassemble_Loop    
+       *BRA Disassemble_Loop    
     BRA CheckProgramCounter
-   
 *_______Start of reading machine code______________________
 
 Disassemble                     * while A5 is less than A6
@@ -270,15 +268,18 @@ _MOVEM_LEA_JSR_RTS
     CLR.L   D6  
     CLR.L   D7  
     MOVE.W  (A5)+,  D2  * load full opcode  
-    MOVE.W  D2, D3  
+    MOVE.W  D2, D3
+       *BEQ _Movem
+      CMP.B   #$48, D1 
+    BEQ _Movem  
+    CMP.W   #$4C, D1  
+    BEQ _Movem  
+
     * check second hex to determine if it is movem or others
     * movem is 1100 or 1000 others are 1110, 1110, and 1111~ xxx1   
     ANDI.W  #$0100, D3    
     CMP.W   #$0100, D3  *   
     BEQ Lea_Jsr_Rts 
-        *BEQ _Movem
-    *CMP.W   #$0800, D3  
-    *BEQ _Movem  
     BRA Lea_Jsr_Rts 
     * Then it should be either lea, jsr, rts    
     
@@ -303,41 +304,218 @@ _Movem
     BEQ MemoryToRegister    
     CMP.W   #$0000, D4  
     BEQ RegisterToMemory    
+    BRA INVALID_OPCODE
     
 MemoryToRegister
+     * register to memory 010, 100, 111, 111 works else error
+    CLR.L   D0  
+    CLR.L   D1      
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7  
+    CLR.L D6
+    MOVE.W  (A5)+, D6
+    JSR PRINT_TAB
+    MOVE.L D2, D1
+    MOVE.L D2, D0
+    CLR.L   D2
+    JSR PREPARE_DATA
+    JSR EA1
+    MOVE.L D0, D1
+    JSR PREPARE_DATA
+    MOVE.W #$FFFF, D7
+    CMP.W #2, D4
+    BEQ REG_TO_MEM_LIST
+    CMP.W #3, D4
+    BEQ REG_TO_MEM_LIST
+    CMP.W #7, D4
+    BEQ REG_TO_MEM_LIST
+    BRA INVALID_OPCODE
 
 RegisterToMemory
-        * get next value data 
-    CLR.L D0  * prepare for iteration Dn ... An or An... Dn     
-    CLR.L   D1 
-    * register to memory 010, 110, 111, 111 works else error
-    MOVE.W  D2, D4    
-    ANDI.W  #$0038, D4  
-    CMP.W   #$0010, D4  
-    BEQ RegisterToMemory_NextWord
-    CMP.W   #$0038, D4  
-    BEQ RegisterToMemory_NextWord
-    CMP.W   #$0039, D4  
-    BEQ RegisterToMemory_NextWord
-    * else I assume all Error   
+    * register to memory 010, 100, 111, 111 works else error
+    CLR.L   D0  
+    CLR.L   D1      
+    CLR.L   D3  
+    CLR.L   D5  
+    CLR.L   D6  
+    CLR.L   D7  
+    CLR.L D6
+    MOVE.W  (A5)+, D6
+    MOVE.L D2, D0
+    MOVE.L D2, D1
+    CLR.L   D2
+    JSR PREPARE_DATA
+    CMP.W #2, D4
+    BEQ REG_TO_MEM_LIST
+    CMP.W #4, D4
+    BEQ REG_TO_MEM_LIST_PRE
+    CMP.W #7, D4
+    BEQ REG_TO_MEM_LIST
+    BRA INVALID_OPCODE
     
-RegisterToMemory_NextWord     
-    MOVE.W  (A5)+,  D4  
-    CLR.L   D3
-    MOVE.W  D4, D3 
-RegiToMemoryCalculate   
-    * make an counter at d1 
-    * so i need away to read 1 each time     
-    CMP.B   #8, D1  * check if it has to be reset to 0   
-    ROL.W   #1, D3  * shift 1 bit to the last
-    BCC    Increase_Counter 
-    JSR Register_List_Mask_An   
-Increase_Counter    
-        ADD.B   #1, D0  * check if this is 16   
-        ADD.B   #1, D1  * reset this to 0 when it hits count 8 D0 ... D7 and A0 ... A7  
-Register_List_Mask_An   
-    MOVE.B  #'A',   (A2)+   
-  
+REG_TO_MEM_LIST
+    JSR PRINT_TAB
+    *Use d6 for list
+    CMP.W #0, D6       
+    BEQ INVALID_OPCODE
+
+    MOVE.B D6, D5
+    LSR.W #8, D6
+    MOVE.L #0, D1
+    MOVE.L #$FFFF, D2
+    MOVE.L #$FFFF, D3
+    
+REG_TO_MEM_ALOOP
+    LEA REG_TO_MEM_ALOOP, A0
+    CMP.B  #8, D1
+    BEQ REG_TO_MEM_ALOOP_PRINT
+    LSR.B #1, D6
+    BCS CHECK_D2D3
+    ADD.B #1, D1
+    BRA REG_TO_MEM_ALOOP
+CHECK_D2D3
+    CMP.W #$FFFF, D2
+    BEQ SET_D2
+SET_D3
+    MOVE.W D1, D3
+    ADD.B #1, D1
+    JMP (A0)
+SET_D2    
+    MOVE.W D1, D2
+    ADD.B #1, D1
+    JMP (A0) 
+    
+REG_TO_MEM_ALOOP_PRINT
+    CMP.W #$FFFF, D2
+    BEQ PREPARE_REG_TO_MEM_DLOOP
+    MOVE.B  #'A',   (A2)+
+    ADD.W #$30, D2   
+    MOVE.B  D2,   (A2)+
+    CMP.W #$FFFF, D3
+    BEQ PREPARE_REG_TO_MEM_DLOOP1
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W #$30, D3   
+    MOVE.B  D3,   (A2)+
+    BRA PREPARE_REG_TO_MEM_DLOOP1
+PREPARE_REG_TO_MEM_DLOOP1
+    MOVE.B  #'/',   (A2)+        
+PREPARE_REG_TO_MEM_DLOOP
+    MOVE.L #0, D1
+    MOVE.L #$FFFF, D2
+    MOVE.L #$FFFF, D3
+REG_TO_MEM_DLOOP
+    LEA REG_TO_MEM_DLOOP, A0
+    CMP.B  #8, D1
+    BEQ REG_TO_MEM_DLOOP_PRINT
+    LSR.B #1, D5
+    BCS CHECK_D2D3
+    ADD.B #1, D1
+    BRA REG_TO_MEM_DLOOP
+REG_TO_MEM_DLOOP_PRINT
+    CMP.W #$FFFF, D2
+    BNE HAS_D
+    SUB.L #1, A2
+    MOVE.B  #' ',   (A2)
+    BRA PRE_REG_TO_MEM_EA
+HAS_D
+    MOVE.B  #'D',   (A2)+
+    ADD.W #$30, D2   
+    MOVE.B  D2,   (A2)+
+    CMP.W #$FFFF, D3
+    BEQ PRE_REG_TO_MEM_EA
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    ADD.W #$30, D3   
+    MOVE.B  D3,   (A2)+
+PRE_REG_TO_MEM_EA
+    CMP.W #$FFFF, D7
+    BEQ GoBack
+    
+REG_TO_MEM_EA
+    MOVE.L D0, D1
+    JSR PRINT_TAB
+    JSR PREPARE_DATA
+    JSR EA1
+    RTS    
+
+REG_TO_MEM_LIST_PRE
+    JSR PRINT_TAB
+    *Use d6 for list
+    CLR.L D6
+    MOVE.W  (A5)+, D6
+    CMP.W #0, D6
+    BEQ INVALID_OPCODE
+    MOVE.L #0, D1
+    MOVE.L #$FFFF, D2
+    MOVE.L #$FFFF, D3
+REG_TO_MEM_ALOOP_PRE
+    LEA REG_TO_MEM_ALOOP_PRE, A0
+    CMP.B  #8, D1
+    BEQ REG_TO_MEM_ALOOP_PRINT_PRE
+    LSL.B #1, D6
+    BCS CHECK_D2D3_PRE
+    ADD.B #1, D1
+    BRA REG_TO_MEM_ALOOP_PRE
+CHECK_D2D3_PRE
+    CMP.W #$FFFF, D2
+    BEQ SET_D2_PRE
+SET_D3_PRE
+    MOVE.W D1, D3
+    ADD.B #1, D1
+    JMP (A0)
+SET_D2_PRE    
+    MOVE.W D1, D2
+    ADD.B #1, D1
+    JMP (A0) 
+    
+REG_TO_MEM_ALOOP_PRINT_PRE
+    CMP.W #$FFFF, D2
+    BEQ PREPARE_REG_TO_MEM_DLOOP_PRE
+    MOVE.B  #'A',   (A2)+
+    ADD.W #$30, D2   
+    MOVE.B  D2,   (A2)+
+    CMP.W #$FFFF, D3
+    BEQ PREPARE_REG_TO_MEM_DLOOP1_PRE
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'A',   (A2)+
+    ADD.W #$30, D3   
+    MOVE.B  D3,   (A2)+
+    BRA PREPARE_REG_TO_MEM_DLOOP1_PRE
+PREPARE_REG_TO_MEM_DLOOP1_PRE
+    MOVE.B  #'/',   (A2)+        
+PREPARE_REG_TO_MEM_DLOOP_PRE
+    MOVE.L #0, D1
+    MOVE.L #$FFFF, D2
+    MOVE.L #$FFFF, D3
+REG_TO_MEM_DLOOP_PRE
+    LEA REG_TO_MEM_DLOOP_PRE, A0
+    CMP.B  #8, D1
+    BEQ REG_TO_MEM_DLOOP_PRINT_PRE
+    LSL.W #1, D6
+    BCS CHECK_D2D3_PRE
+    ADD.B #1, D1
+    BRA REG_TO_MEM_DLOOP_PRE
+REG_TO_MEM_DLOOP_PRINT_PRE
+    CMP.W #$FFFF, D2
+    BNE HAS_D_PRE
+    SUB.L #1, A2
+    MOVE.B  #' ',   (A2)
+    BRA REG_TO_MEM_EA
+HAS_D_PRE
+    MOVE.B  #'D',   (A2)+
+    ADD.W #$30, D2   
+    MOVE.B  D2,   (A2)+
+    CMP.W #$FFFF, D3
+    BEQ REG_TO_MEM_EA
+    MOVE.B  #'-',   (A2)+
+    MOVE.B  #'D',   (A2)+
+    ADD.W #$30, D3   
+    MOVE.B  D3,   (A2)+
+    BRA REG_TO_MEM_EA
+
                 
 * basic logic
 * its always going to be either 11xx or 10xx    
@@ -348,7 +526,8 @@ _MovemSize
     ANDI.W  #$0040, D4   * prepare for compare
     CMP.W  #$0040,  D4    
     BEQ Movem_LongWord_Size 
-    MOVE.B  #'W',   (A2)+        
+    MOVE.B  #'W',   (A2)+  
+    RTS      
 Movem_LongWord_Size 
     MOVE.B  #'L',   (A2)+   
     RTS    
@@ -1912,6 +2091,7 @@ PREPARE_DATA_REG
     LSL   #8, D1 
     ADDA #1, A5
     MOVE.B (A5)+, D1            * full opcode word in D1
+PREPARE_DATA    
     MOVE.W  D1, D2              * copy D1 to D2, for dest mode
     MOVE.W  D1, D3              * copy D1 to D3, for dest register
     MOVE.W  D1, D4              * copy D1 to D2, for src mode
@@ -2128,10 +2308,9 @@ Mes_End_Adr     DC.B    'Please Enter Ending Location: $', 0
 Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0   
             
 Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
-Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0   
-
+Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0 
 Mes_Continue_Read   DC.B    'Please hit Space to conitnue read. Q or q to quit program', CR, LF, 0  
-Mes_TerminateProgram DC.B   'Ending the Program... Bye', CR, LF, 0  
+Mes_TerminateProgram DC.B   'Ending the Program... Bye', CR, LF, 0    
 
 RTS_VALUE               DC.W        'RTS',0     * Requested
 JSR_VALUE               DC.W        'JSR',0     * Requested
@@ -2219,8 +2398,3 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
