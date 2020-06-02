@@ -539,7 +539,7 @@ Lea_Jsr_Rts
     BEQ LEA 
     CMP.W   #$0080, D4  
     BEQ JSR 
-    CMP.W   #$0070, D4  
+    CMP.W   #$0040, D4    
     BEQ RTS 
     *BRA JSR_RTS     
 JSR 
@@ -2412,6 +2412,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
