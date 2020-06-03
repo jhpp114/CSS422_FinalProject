@@ -850,6 +850,7 @@ _Byte_EA_DN
     *ROL.W   #4, D4  
     *ROL.W   #4, D4  
     MOVE.W  D4, D5  
+    MOVE.W  D4, D3
     ANDI.W  #$0007, D4  * same logic, check the number 000, 001, 010, etc          
     JSR Register_Lists  
     RTS 
@@ -872,6 +873,9 @@ _Word_EA_DN
     LSR.W   #4, D4  
     LSR.W   #1, D4  
     MOVE.W  D4, D5  
+    
+    MOVE.W  D4, D3
+    
     ANDI.W  #$0007, D4  
     JSR Register_Lists  
     RTS 
@@ -895,6 +899,9 @@ _Longword_EA_DN
     LSR.W   #4, D4  
     LSR.W   #1, D4  
     MOVE.W  D4, D5  
+    
+    MOVE.W  D4, D3
+    
     ANDI.W  #$0007, D4 
     JSR Register_Lists  
     RTS
@@ -916,7 +923,9 @@ _Byte_DN_EA
     LSR.W   #4, D4  
     LSR.W   #4, D4  
     LSR.W   #1, D4  
-    MOVE.W  D4, D5  
+    MOVE.W  D4, D5
+  
+    MOVE.W  D4, D3
     
     ANDI.W  #$0007, D4 
     MOVE.W  D2, D3  
@@ -944,6 +953,8 @@ _Word_DN_EA
     LSR.W   #1, D4  
     MOVE.W  D4, D5  
     
+    MOVE.W  D4, D3
+    
     ANDI.W  #$0007, D4 
     MOVE.W  D2, D3  
     ROL.W   #4, D3  
@@ -969,6 +980,8 @@ _Longword_DN_EA
     LSR.W   #4, D4  
     LSR.W   #1, D4  
     MOVE.W  D4, D5  
+    
+    MOVE.W  D4, D3
     
     ANDI.W  #$0007, D4 
     MOVE.W  D2, D3  
