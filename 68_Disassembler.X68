@@ -113,6 +113,8 @@ Disassemble_Loop
 *   Clear Loop  
     JSR Print_Cur_Addr
     LEA ProgramEnd, A2  * A2    store   program end 
+    JSR ERASE_A2_MEM
+    LEA ProgramEnd, A2  * A2    store   program end
     JSR Disassemble  
     MOVE.B  #$00,   (A2)+   
     LEA ProgramEnd, A1  
@@ -125,6 +127,14 @@ Disassemble_Loop
     *________________________________________________________
        *BRA Disassemble_Loop    
     BRA CheckProgramCounter
+ERASE_A2_MEM
+    MOVE.L A2, D2
+    ADD.L #50, D2
+ERASE_A2_LOOP
+    CMP.L D2, A2
+    BEQ GoBack
+    MOVE.B #$FF, (A2)+
+    BRA  ERASE_A2_LOOP
 *_______Start of reading machine code______________________
 
 Disassemble                     * while A5 is less than A6
@@ -175,9 +185,21 @@ Disassemble                     * while A5 is less than A6
         BRA INVALID_OPCODE
         
 INVALID_OPCODE                   * skip to the next word
-        
+        MOVE.B #'C', (A2)+
+        MOVE.B #'A', (A2)+
+        MOVE.B #'N', (A2)+
+        MOVE.B #'N', (A2)+
+        MOVE.B #'O', (A2)+
+        MOVE.B #'T', (A2)+
+        MOVE.B #' ', (A2)+
+        MOVE.B #'D', (A2)+
+        MOVE.B #'E', (A2)+
+        MOVE.B #'C', (A2)+
+        MOVE.B #'O', (A2)+
+        MOVE.B #'D', (A2)+
+        MOVE.B #'E', (A2)+
         ADDA #$2, A5
-        BRA Disassemble 
+        RTS
         
 * for all below methods,      
 
@@ -2215,7 +2237,7 @@ EA
     
     CMP.W #$7,D4
     BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA1
-#don't use. check PRINT_ABSOLUTE_IMMEDIATE_DATA1 
+*don't use. check PRINT_ABSOLUTE_IMMEDIATE_DATA1 
 PRINT_ABSOLUTE_IMMEDIATE_DATA                    
     CMP.B #4, D5
     BEQ PRINT_IMMEDIATE_DATA
