@@ -90,7 +90,7 @@ Check_Input_Address
 *_______End of User Input Adr______________________________ 
 CheckProgramCounter 
     CMP.B   #25,    ProgramCounter  * check program counter 
-    BLE Disassemble_Loop    
+    BNE Disassemble_Loop        
     JSR ToContinueProgram 
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
@@ -2727,6 +2727,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
