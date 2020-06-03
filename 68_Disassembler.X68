@@ -1042,6 +1042,15 @@ EA_Lists
     CMP.W   #4, D3  
     BEQ EA_List_100 
     
+    CMP.W   #5, D3  
+    BEQ EA_List_101 
+    
+    CMP.W   #6, D3  
+    BEQ EA_List_110 
+    
+    CMP.W   #7, D3  
+    BEQ EA_List_111 
+    
     RTS *  RTS for now  
 
 EA_List_000 
@@ -2412,6 +2421,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~
