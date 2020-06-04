@@ -1287,7 +1287,8 @@ Register_011
     MOVE.B  #'3',   (A2)+   
     RTS 
 Register_100    
-
+    MOVE.B  #'4',   (A2)+   
+    RTS 
 Register_101
     MOVE.B  #'5',   (A2)+   
     RTS 
@@ -2769,6 +2770,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
