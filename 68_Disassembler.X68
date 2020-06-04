@@ -1287,8 +1287,45 @@ Register_011
     MOVE.B  #'3',   (A2)+   
     RTS 
 Register_100    
+    MOVE.W  D3, D4  
+    ROL.W   #8, D4  
+    ROL.W  #5, D4     
+    ANDI.W  #$0007, D4  
+    CMP.B   #$7,    D4  
+    BNE Just_Four   
+    MOVE.B  #0, D4  
+    MOVE.B  #'#',   (A2)+   
+    MOVE.B  #'$',   (A2)+   
+    
+    MOVE.W  D3, D7  * to determine the size to decide long or word immediate data   
+    ROL.W   #4, D7  
+    ROL.W   #3, D7  
+    ROL.W   #3, D7  
+    ANDI.W  #$0007, D7  * get opmode    
+    CMP.W   #$0002, D7   
+    BEQ    Longword_100 
+    CMP.W   #$0006, D7  
+    BEQ Longword_100    
+    BRA word_100    
+    RTS 
+Longword_100    
+    CLR.L   D7  
+    MOVE.L  (A5)+,  D3 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #8, D1  
+    JSR GetLongword_Value
+    RTS 
+word_100
+    MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
+    CLR.L   D1  * clear d1 to use as a counter  
+    MOVE.B  #4, D1   
+    JSR GetWord_Value   
+    RTS 
+
+Just_Four
     MOVE.B  #'4',   (A2)+   
     RTS 
+
 Register_101
     MOVE.B  #'5',   (A2)+   
     RTS 
@@ -2770,6 +2807,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
