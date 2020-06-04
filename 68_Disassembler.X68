@@ -631,6 +631,9 @@ RTS
     MOVE.W  D2, D4  
     CMP.W   #$4E75, D4  * just print RTS    
     BEQ Print_RTS  
+    * Below added for invalid_________________
+    CMP.W   #$4E75, D4  
+    BNE INVALID_OPCODE
     * not equal then simply throw error 
 Print_RTS   
     MOVE.B  #'R',           (A2)+     
@@ -643,6 +646,22 @@ LEA
     CLR.L   D5  
     CLR.L   D4  
     MOVE.W  D2, D3  
+    * adding for invalid things 
+    ROR.W   #3, D3    
+    ANDI.W  #$0007, D3
+    CMP.W   #$0000, D3  * catching Dn case invalid    
+    BEQ INVALID_OPCODE    
+    CMP.W   #$0001, D3  * caching An case invalid   
+    BEQ INVALID_OPCODE  
+    CMP.W   #$0003, D3  * catching (An)+ case invalid   
+    BEQ INVALID_OPCODE    
+    CMP.W   #$0004, D3  * catching -(An) case invalid   
+        BEQ INVALID_OPCODE  
+    *____________________Invalid case done________________________
+    CLR.L   D3 * edge case seems to be clear so reset address    
+    MOVE.W  D2, D3  
+    *  end of addling for invalid things    
+    
     ROR.W   #3, D3  * shift 3 to obtain src mode   
     MOVE.W  D3, D5  
     MOVE.W  D3, D4  * store in D4 to use function EA_LIST and REGISTER_LISTS    
@@ -2752,6 +2771,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
