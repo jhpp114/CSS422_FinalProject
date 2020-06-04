@@ -185,6 +185,9 @@ Disassemble                     * while A5 is less than A6
         BRA INVALID_OPCODE
         
 INVALID_OPCODE                   * skip to the next word
+        LEA ProgramEnd, A2  * A2    store   program end
+        JSR ERASE_A2_MEM
+        LEA ProgramEnd, A2  * A2    store   program end
         MOVE.B #'C', (A2)+
         MOVE.B #'A', (A2)+
         MOVE.B #'N', (A2)+
