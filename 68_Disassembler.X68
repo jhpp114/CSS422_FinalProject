@@ -469,8 +469,6 @@ REG_TO_MEM_EA
 REG_TO_MEM_LIST_PRE
     JSR PRINT_TAB
     *Use d6 for list
-    CLR.L D6
-    MOVE.W  (A5)+, D6
     CMP.W #0, D6
     BEQ INVALID_OPCODE
     MOVE.L #0, D1
