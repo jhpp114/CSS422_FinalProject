@@ -1161,10 +1161,10 @@ EA_List_100
 *   I do not know How to handle this....
 *   Maybe just put invalid data?    
 EA_List_101
-    BRA Finish * End if for now  
+    BRA INVALID_OPCODE 
 
 EA_List_110
-    BRA Finish  
+    BRA INVALID_OPCODE 
     
 
 EA_List_111    
@@ -2770,6 +2770,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
