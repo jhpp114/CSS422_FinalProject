@@ -82,10 +82,7 @@ Check_Input_Address
     MOVE.L  #$00000000, A2    
     MOVE.L  #$00000000, A3    
     MOVE.L  #$00000000, A4    
-    
-    *MOVEA.L A6, A4  * store ending address to use after
-    *BRA Finish  
-  
+    *____________ End of Clear____________________________________________ 
     
 *_______End of User Input Adr______________________________ 
 CheckProgramCounter 
@@ -570,20 +567,20 @@ JSR
     CLR.L   D3  
     CLR.L   D5  
     MOVE.W  D2, D4  * store for basic check validation    
-    ANDI.W  #$00F0, D4    
-    CMP.W   #$0090, D4    
+    ANDI.W  #$00F0, D4    * perform test with 1111 on third hex, whatever it matches with 1 result out 1    
+    CMP.W   #$0090, D4    *  already 10xx, 10 part is confirm, to obtain retain two digits 01 then 010  
     BEQ Print_JSR_010   
     CLR.L   D4  * if not same then reset D4 and store value again for validation check  
-    MOVE.W  D2, D4  
-    ANDI.W  #$00FF, D4    
-    CMP.W   #$00B8, D4      
+    MOVE.W  D2, D4      * store it in cleared D4    
+    ANDI.W  #$00FF, D4    * perform 1111 1111   
+    CMP.W   #$00B8, D4    *  already 10xx xxxx is confirm, to obtain xx xxxx check with 111 000 then it is 111 000    
     BEQ Print_JSR_111_000   
     CLR.L   D4  * if not same then reste D4 and store value again for validation check  
-    MOVE.W  D2, D4  
-    ANDI.W  #$00FF, D4    
-    CMP.W   #$00B9, D4      
+    MOVE.W  D2, D4  * store it in cleared D4    
+    ANDI.W  #$00FF, D4    * same logic  
+    CMP.W   #$00B9, D4    * 10xx xxxx -> check x bits either 111 001 then 111 001     
     BEQ Print_JSR_111_001   
-    * rest its invalid  
+    * rest its invalid   
 Print_JSR_010   
     MOVE.B  #'J',   (A2)+   
     MOVE.B  #'S',   (A2)+   
@@ -2456,6 +2453,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
