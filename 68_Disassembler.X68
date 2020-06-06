@@ -18,9 +18,7 @@ START:
     
 *_______Get User Input____________________________
 Get_Input_Start_ADR
-    LEA     Extra_Space,    A1
-    MOVE.B  #14,            D0
-    TRAP    #15
+    JSR PRINT_NEWLINE
     CLR.L   D2  
     CLR.L   D3
    
@@ -63,9 +61,7 @@ Get_Input_End_ADR
     * Store user Input start address to A6  
     MOVE.L  D3, EndLocData
     MOVE.L  EndLocData, A6  
-    LEA     Extra_Space,    A1
-    MOVE.B  #14,            D0
-    TRAP    #15
+    JSR PRINT_NEWLINE
     
 *________________________________________________________   
 *   Compare Starting Address and End Address see if it make sense       
@@ -179,20 +175,19 @@ INVALID_OPCODE                   * skip to the next word
         LEA ProgramEnd, A2  * A2    store   program end
         JSR ERASE_A2_MEM
         LEA ProgramEnd, A2  * A2    store   program end
-        MOVE.B #'C', (A2)+
+        MOVE.B #'D', (A2)+
         MOVE.B #'A', (A2)+
-        MOVE.B #'N', (A2)+
-        MOVE.B #'N', (A2)+
-        MOVE.B #'O', (A2)+
         MOVE.B #'T', (A2)+
+        MOVE.B #'A', (A2)+
         MOVE.B #' ', (A2)+
-        MOVE.B #'D', (A2)+
-        MOVE.B #'E', (A2)+
-        MOVE.B #'C', (A2)+
-        MOVE.B #'O', (A2)+
-        MOVE.B #'D', (A2)+
-        MOVE.B #'E', (A2)+
-        ADDA #$2, A5
+        MOVE.B #' ', (A2)+
+        MOVE.B #' ', (A2)+
+        MOVE.B  #0, D4      *   set up counter 0 at d4  
+        MOVE.B  #'$',   (A2)+       * push it in this program ending memory 
+        MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
+        CLR.L   D1          * clear d1 to use as a counter  
+        MOVE.B  #4, D1      * set up counter at d1  
+        JSR GetWord_Value   
         RTS
         
 * for all below methods,      
@@ -1992,11 +1987,15 @@ Invalid_Adr_Not_Even
         TRAP    #15 
         BRA Get_Input_Start_ADR     * go back to obtain starting adr 
     
-*__________________________Keep Decode after 25_________________________________    
-ToContinueProgram
-        LEA     Extra_Space,    A1
+
+PRINT_NEWLINE
+        LEA     NEWLINE,    A1
         MOVE.B  #14,            D0
         TRAP    #15
+        RTS 
+*__________________________Keep Decode after 25_________________________________    
+ToContinueProgram
+        JSR PRINT_NEWLINE
         LEA Mes_Continue_Read,  A1  
         MOVE.B  #14,    D0  
         TRAP    #15 
@@ -2014,9 +2013,7 @@ ContinueProgram
         MOVE.B  #0, ProgramCounter  * set  counter to 0 
         RTS
 END_Program
-        LEA     Extra_Space,    A1
-        MOVE.B  #14,            D0
-        TRAP    #15
+        JSR PRINT_NEWLINE
         LEA Mes_Run_Again,   A1     
         MOVE.B  #14,    D0  
         TRAP    #15 
@@ -2033,18 +2030,15 @@ END_Program
         BRA     END_Program *Else repeat query
 
 REACH_END_ADR
-        LEA     Extra_Space,    A1  
-        MOVE.B  #14,    D0  
-        TRAP    #15
+        JSR PRINT_NEWLINE
         LEA     Mes_Reached_End,    A1
         MOVE.B  #14,    D0  
         TRAP    #15 
+        BRA END_Program
         BRA FINISH  
         
 FINISH *End program
-        LEA     Extra_Space,    A1
-        MOVE.B  #14,            D0
-        TRAP    #15
+        JSR PRINT_NEWLINE
         LEA Mes_TerminateProgram,   A1  * just print out message    
         MOVE.B  #14,    D0  
         TRAP    #15 
@@ -2056,7 +2050,7 @@ FINISH *End program
 *-----------------------------------------------------------------------------------------------------------------------
 CR                              EQU     $0D     *   Carriage Return
 LF                              EQU     $0A     *   Line Feed
-Extra_Space                     DC.B    CR, LF, 0
+NEWLINE                         DC.B    CR, LF, 0
 *Messages
 Mes_Welcome                     DC.B    'Welcome to the Disassembler Program', CR, LF
                                 DC.B    'Final Project for CSS 422', CR, LF
@@ -2072,7 +2066,7 @@ Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or eq
 Mes_Continue_Read               DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0
 Mes_Run_Again                   DC.B    'Run disassembler again? (y or n).', CR, LF, 0
 Mes_TerminateProgram            DC.B    'Ending the program...Bye', CR, LF, 0
-Mes_Reached_End                 DC.B    'The program reached End Address', CR, LF, 0    
+Mes_Reached_End                 DC.B    'The program reached the end address', CR, LF, 0    
 *Storage
 UserInput                       DS.L    1   
 StartLocData                    DS.L    1   *Starting address
