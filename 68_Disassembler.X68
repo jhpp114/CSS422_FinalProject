@@ -18,6 +18,9 @@ START:
     
 *_______Get User Input____________________________
 Get_Input_Start_ADR
+    LEA     Extra_Space,    A1
+    MOVE.B  #14,            D0
+    TRAP    #15
     CLR.L   D2  
     CLR.L   D3
    
@@ -1116,11 +1119,8 @@ Calculate_EA_Mode
     ROL.W   #3, D3  * Shift 3     
     MOVE.W  D3, D4  *  Save shifted value just for safe   
     ANDI.W  #$0007, D3  * check last 3 bits which is mode it is    
-               
     JSR  EA_Lists  
-
     RTS 
-    *BRA FINISH  
 *__________________________EA MODE Lists_________________________________________   
 EA_Lists
     CMP.W   #$000,  D3  
@@ -1183,7 +1183,7 @@ EA_List_000
     ANDI.W  #$0007, D4  *   Check last 3 bits (register)    
     JSR Register_Lists  
     RTS 
-* Apply same logic as EA_List_000   
+
 EA_List_001
     MOVE.B  #'A',   (A2)+   * push it in this program ending memory
     ROL.W   #3, D4          * obtain original data    
@@ -1224,22 +1224,18 @@ EA_List_100
     MOVE.B  #')',   (A2)+   * push it in this program ending memory
     RTS 
 
-*   I do not know How to handle this....
-*   Maybe just put invalid data?    
 EA_List_101
     BRA INVALID_OPCODE      * just invalid  
 
 EA_List_110
     BRA INVALID_OPCODE      * just invalid    
     
-
 EA_List_111    
     ROL.W   #3, D4      * obtain original data     
     MOVE.W  D4, D3      * store it for safety   
     ANDI.W  #$0007, D4  *  use AND logic 111 to obtain register ea  
     JSR Register_Lists   
     RTS  
-    
 
 *______________________ Lists of Registers________________________________________________  
 Register_Lists
@@ -1326,7 +1322,7 @@ Register_001
     JSR GetLongword_Value   
     RTS  
     
-*   Same logic applies with word function located at above  
+*Same logic applies with word function located at above  
 GetLongword_Value
     ROL.L   #4, D3    
     MOVE.L  D3, D7  
@@ -1374,7 +1370,7 @@ Register_100
     BEQ    Longword_100 
     CMP.W   #$0006, D7  
     BEQ Longword_100    
-    BRA word_100    
+    BRA Word_100    
     RTS 
 Longword_100    
     CLR.L   D7  
@@ -1383,7 +1379,7 @@ Longword_100
     MOVE.B  #8, D1  
     JSR GetLongword_Value
     RTS 
-word_100
+Word_100
     MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
     CLR.L   D1  * clear d1 to use as a counter  
     MOVE.B  #4, D1   
@@ -1566,8 +1562,6 @@ ROTATE_MEM
 * start to print final result
 *------------------------------------------------
 OUTPUT_RESULT
-*   Subroutine
-*_________________________________________________
 *_______PRINT CURRENT ADDRESS______________________________ 
 Print_Cur_Addr
     MOVE.L  A5, D2 * move staring addr to d2
@@ -1619,7 +1613,6 @@ Convert_Ascii_to_Hex_DisplayAdr
     TRAP    #15 
     CLR.L   D1  * clear d1  
     BRA Convert_Hex_to_Ascii 
-
 
 ConvertInput        
        MOVE.B  (A1)+,  D2   
@@ -1808,16 +1801,18 @@ MovePrintNumFixer_DECRE
     CLR.L   D7
     BRA PRINT_REAL_DECRE_ADDRESS_REG 
 *___________End of added code to fix_________
-*___________________________DECRE____FIXED__________________________________
- 
+
+*___________________________DECRE____FIXED__________________________________ 
 PRINT_WORD
     MOVE.B  #'.',   (A2)+
     MOVE.B  #'W',   (A2)+
     JMP     (A0)  
+
 PRINT_LONGWORD
     MOVE.B  #'.',   (A2)+
     MOVE.B  #'L',   (A2)+
     JMP     (A0) 
+
 PRINT_BYTE
     MOVE.B  #'.',   (A2)+
     MOVE.B  #'B',   (A2)+
@@ -1829,7 +1824,6 @@ PRINT_TAB
     MOVE.B  #' ',   (A2)+
     MOVE.B  #' ',   (A2)+
     RTS
-
 
 PREPARE_DATA_REG
     LSL   #8, D1 
@@ -1860,7 +1854,7 @@ PREPARE_DATA
     LSR.W   #5,  D5             * now D5 is 0000 0000 0000 0000 0000 0000 0000 0xxx, xxx is src register
     
     RTS
-*--------------original code
+
 EA1
     CMP.B #0, D4
     BEQ PRINT_DATA_REG1 
@@ -1902,12 +1896,10 @@ PRINT_IMMEDIATE_DATA1
 READLONGWORD1    
     MOVE.B  #0, D4  
     MOVE.B  #'#',   (A2)+   
-
     MOVE.B  #'$',   (A2)+   
     MOVE.L  (A5)+,  D3  *   increase long word size address 
     CLR.L   D1  * clear d1 to use as a counter  
     MOVE.B  #8, D1  
-   
     JSR GetLongword_Value   
     RTS
 
@@ -1923,7 +1915,6 @@ LONGWORD_ADDR1
     MOVE.L  (A5)+,  D3  *   increase long word size address 
     CLR.L   D1  * clear d1 to use as a counter  
     MOVE.B  #8, D1  
-   
     JSR GetLongword_Value   
     RTS
 WORD_ADDR1
@@ -2024,12 +2015,29 @@ END_Program
         LEA     Extra_Space,    A1
         MOVE.B  #14,            D0
         TRAP    #15
+        LEA Mes_Run_Again,   A1     
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        MOVE.B  #5, D0  *Get user input in D1  
+        TRAP    #15 
+        CMP.B   #$79,   D1 *y
+        BEQ     Get_Input_Start_ADR
+        CMP.B   #$59,   D1 *Y
+        BEQ     Get_Input_Start_ADR
+        CMP.B   #$6E,   D1 *n
+        BEQ     FINISH
+        CMP.B   #$4E,   D1 *N
+        BEQ     FINISH
+        BRA     END_Program *Else repeat query
+FINISH *End program
+        LEA     Extra_Space,    A1
+        MOVE.B  #14,            D0
+        TRAP    #15
         LEA Mes_TerminateProgram,   A1  * just print out message    
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA FINISH  * end program   
     
-FINISH  SIMHALT
+      SIMHALT
         
 *-----------------------------------------------------------------------------------------------------------------------
 * VARIABLES
@@ -2039,17 +2047,18 @@ LF                              EQU     $0A     *   Line Feed
 Extra_Space                     DC.B    CR, LF, 0
 *Messages
 Mes_Welcome                     DC.B    'Welcome to the Disassembler Program', CR, LF
-                                DC.B    'Final Project for CSS 422',    CR, LF
-                                DC.B    '   Authors:',    CR, LF
-                                DC.B    '       Yang Hu',    CR, LF
-                                DC.B    '       Matt Johnson',    CR, LF
-                                DC.B    '       Jun Park',    CR, LF, 0
+                                DC.B    'Final Project for CSS 422', CR, LF
+                                DC.B    '   Authors:', CR, LF
+                                DC.B    '       Yang Hu', CR, LF
+                                DC.B    '       Matt Johnson', CR, LF
+                                DC.B    '       Jun Park', 0
 Mes_Start_Adr                   DC.B    'Please enter start address (word): $', 0
 Mes_End_Adr                     DC.B    'Please enter end address (word): $', 0
 Mes_Invalid                     DC.B    'The address you provided is invalid', CR, LF, 0
 Mes_EvenNumber_Error            DC.B    'The address you provided is not an even ending number',  CR, LF, 0
 Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or equal to the end address', CR, LF, 0
 Mes_Continue_Read               DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0
+Mes_Run_Again                   DC.B    'Run disassembler again? (y or n).', CR, LF, 0
 Mes_TerminateProgram            DC.B    'Ending the program...Bye', CR, LF, 0
 *Storage
 UserInput                       DS.L    1   
