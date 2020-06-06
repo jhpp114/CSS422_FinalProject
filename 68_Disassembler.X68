@@ -234,7 +234,7 @@ IS_SEVEN
     CMP.W #$7,D4
     BNE INVALID_OPCODE
 TO_EA
-    JSR EA
+    JSR EA1
     
     MOVE.B  #',',   (A2)+  
     
@@ -263,7 +263,7 @@ MOVE_MOVEA_DEST
     
     BRA INVALID_OPCODE
 TO_EA_2
-   JSR EA
+   JSR EA1
    *BRA OUTPUT_RESULT
    RTS  
 
@@ -817,205 +817,290 @@ IS_LET
 
 *___________________END OF B brothers__________________________ 
 
-*______________________SUB_____________________________________________
-_SUB
-* clear out before use
-    CLR.L   D0  
-    CLR.L   D2      
-    CLR.L   D3  
-    CLR.L   D5  
-    CLR.L   D6  
-    CLR.L   D7  
-* clear out before use
-    MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
-    MOVE.W  D2, D6    *     put it into d6 for safe bit play    
-    * shoud not call this maybe bad opmode or some weired register exist.     
-    * Basic idea
-    * all sub 1001 do and operation with 0000 will just 0000
-    * if it is ea - dn then 1001 xxx, xxx cannot be 000 so if you do and operation 000 then its always result as 0  
-    * after 1001 xxx, then its opmode, for byte (ea - dn) it is always starting with 0 so do and with 1 so it is 0000 
-    * Rest of two digit for opmode     
-    *   11 and 00  = 00, 11 01 = 01, 11 10 = 10 use this to distinguish 
-    ANDI.W  #$01C0, D6  
-    * Check opmode using above logic    
-    CMP.W   #$0000, D6
-    BEQ _Byte_EA_DN     
-    CMP.W   #$0040, D6  
-    BEQ _Word_EA_DN 
-    CMP.W   #$0080,  D6      
-    BEQ _Longword_EA_DN 
-    * to check DN - EA, since it is same but 1 infront, just put 01 instead of 00   
-    CMP.W   #$0100, D6  
-    BEQ _Byte_DN_EA 
-    CMP.W   #$0140, D6  
-    BEQ _Word_DN_EA 
-    CMP.W   #$0180, D6  
-    BEQ _Longword_DN_EA 
-    *_________Else__________Invalid Data_______________ 
-    
-_Byte_EA_DN     
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    JSR Calculate_EA_Mode          
-    * land it on here   
-    MOVE.B  #',',     (A2)+     * push it in this program ending memory
-    MOVE.B  #'D',    (A2)+   *Always D   
-    MOVE.W  D2,   D4        *   restore value from d2   
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field    
-    LSR.W   #4, D4      
-    LSR.W   #4, D4  
-    LSR.W   #1, D4    
-    *ROL.W   #4, D4  
-    *ROL.W   #4, D4  
-    MOVE.W  D4, D5  
-    MOVE.W  D4, D3
-    ANDI.W  #$0007, D4  * same logic, check the number 000, 001, 010, etc          
-    JSR Register_Lists  
-    RTS 
-   
-_Word_EA_DN
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'W',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    JSR Calculate_EA_Mode
-    *   Apply Same logic with Byte_EA_DN  
-    MOVE.B  #',',    (A2)+   
-    MOVE.B  #'D',    (A2)+    
-    MOVE.W  D2, D4
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
-    LSR.W   #4, D4      * move the regsiter bit to left 
-    LSR.W   #4, D4      * move the resgister bit to left    
-    LSR.W   #1, D4  
-    MOVE.W  D4, D5      * store register safe   
-    
-    MOVE.W  D4, D3      * store register safe   
-    
-    ANDI.W  #$0007, D4  * determine the resgister by And 0111       
-    JSR Register_Lists  
-    RTS 
-      
-
-_Longword_EA_DN
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'L',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    JSR Calculate_EA_Mode   
-    *   Apply Same logic with Byte_EA_DN    
-    MOVE.B  #',',   (A2)+   
+*-----------------------------------------------------------------------------------------------------------------------
+* ADD
+*-----------------------------------------------------------------------------------------------------------------------
+_ADD
+    MOVE.B  #'A',   (A2)+  
     MOVE.B  #'D',   (A2)+   
-    MOVE.W  D2, D4  
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
-    LSR.W   #4, D4      * move the resgister bit to left  
-    LSR.W   #4, D4      * move the resgister bit to left  
-    LSR.W   #1, D4  
-    MOVE.W  D4, D5      * store register safe
-    
-    MOVE.W  D4, D3      * store register safe
-    
-    ANDI.W  #$0007, D4  * determine the resgister by And 0111 
-    JSR Register_Lists  
+    MOVE.B  #'D',   (A2)+   
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6   
+    CMP.W   #$0000, D6
+    BEQ _B_EA_DN     
+    CMP.W   #$0040, D6  
+    BEQ _W_EA_DN 
+    CMP.W   #$0080,  D6      
+    BEQ _L_EA_DN
+    CMP.W   #$0100, D6  
+    BEQ _B_DN_EA 
+    CMP.W   #$0140, D6  
+    BEQ _W_DN_EA 
+    CMP.W   #$0180, D6  
+    BEQ _L_DN_EA 
+    BRA _ELSE
+*-----------------------------------------------------------------------------------------------------------------------
+* ADD END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* AND
+*-----------------------------------------------------------------------------------------------------------------------
+_AND
+    MOVE.B  #'A',   (A2)+  
+    MOVE.B  #'N',   (A2)+   
+    MOVE.B  #'D',   (A2)+   
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0100, D6  
+    BEQ     _B_DN_EA
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0140, D6  
+    BEQ     _W_DN_EA
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    CMP.W   #$0180, D6  
+    BEQ     _L_DN_EA
+    BRA     _ELSE
+*-----------------------------------------------------------------------------------------------------------------------
+* AND END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* CMP
+*-----------------------------------------------------------------------------------------------------------------------
+_CMP
+    MOVE.B  #'C',   (A2)+  
+    MOVE.B  #'M',   (A2)+   
+    MOVE.B  #'P',   (A2)+
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    BRA     _ELSE
+*-----------------------------------------------------------------------------------------------------------------------
+* CMP END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* OR
+*-----------------------------------------------------------------------------------------------------------------------
+_OR
+    MOVE.B  #' ',   (A2)+  
+    MOVE.B  #'O',   (A2)+   
+    MOVE.B  #'R',   (A2)+   
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0100, D6  
+    BEQ     _B_DN_EA
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0140, D6  
+    BEQ     _W_DN_EA
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    CMP.W   #$0180, D6  
+    BEQ     _L_DN_EA
+    BRA     _ELSE
+*-----------------------------------------------------------------------------------------------------------------------
+* OR END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* SUB
+*-----------------------------------------------------------------------------------------------------------------------
+_SUB
+    MOVE.B  #'S',   (A2)+
+    MOVE.B  #'U',   (A2)+
+    MOVE.B  #'B',   (A2)+
+    MOVE.W  (A5)+,   D2    
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6  
+    CMP.W   #$0000, D6
+    BEQ _B_EA_DN     
+    CMP.W   #$0040, D6  
+    BEQ _W_EA_DN 
+    CMP.W   #$0080,  D6      
+    BEQ _L_EA_DN
+    CMP.W   #$0100, D6  
+    BEQ _B_DN_EA 
+    CMP.W   #$0140, D6  
+    BEQ _W_DN_EA 
+    CMP.W   #$0180, D6  
+    BEQ _L_DN_EA 
+    BRA _ELSE
+*-----------------------------------------------------------------------------------------------------------------------
+* SUB END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* GENERAL SUBROUTINES
+*-----------------------------------------------------------------------------------------------------------------------
+*Clear all 8 data registers
+_CLEAR_DN
+    CLR.L   D0
+    CLR.L   D1
+    CLR.L   D2
+    CLR.L   D3
+    CLR.L   D4
+    CLR.L   D5
+    CLR.L   D6
+    CLR.L   D7
     RTS
 
-*   sub.b x, Dx 
-_Byte_DN_EA
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
-    * Apply Opposite way compare to EA-DN  
-    MOVE.W  D2, D4   
-    *MOVE.W  D
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
-    LSR.W   #4, D4      * move the resgister bit to left
-    LSR.W   #4, D4      * move the resgister bit to left
-    LSR.W   #1, D4  
-    MOVE.W  D4, D5      * store register safe
-  
-    MOVE.W  D4, D3      * store register safe
-    
-    ANDI.W  #$0007, D4  * determine the resgister by And 0111
-    MOVE.W  D2, D3      * store orignial value data 
-    ROL.W   #4, D3      * first word bit will go to end to prepare register_list    
-    JSR Register_Lists  
-    MOVE.B  #',',    (A2)+      
-    JSR Calculate_EA_Mode
-    RTS 
-       
-_Word_DN_EA
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'W',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
-    * Apply Opposite way compare to EA-DN  
-    MOVE.W  D2, D4   
-    *MOVE.W  D
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
-    LSR.W   #4, D4  
-    LSR.W   #4, D4  
-    LSR.W   #1, D4  
-    MOVE.W  D4, D5  
-    
-    MOVE.W  D4, D3
-    
-    ANDI.W  #$0007, D4 
-    MOVE.W  D2, D3  
-    ROL.W   #4, D3  
-    JSR Register_Lists  
-    MOVE.B  #',',    (A2)+      
-    JSR Calculate_EA_Mode
-    RTS  
+*Push '.B' into output
+_B
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'B',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    RTS
 
-_Longword_DN_EA
-    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'L',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
-    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
-    * Apply Opposite way compare to EA-DN  
-    MOVE.W  D2, D4   
-    *MOVE.W  D
-    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
-    LSR.W   #4, D4  
-    LSR.W   #4, D4  
-    LSR.W   #1, D4  
-    MOVE.W  D4, D5  
-    
-    MOVE.W  D4, D3
-    
-    ANDI.W  #$0007, D4 
-    MOVE.W  D2, D3  
-    ROL.W   #4, D3  
-    JSR Register_Lists  
-    MOVE.B  #',',    (A2)+      
-    JSR Calculate_EA_Mode
-    RTS  
+*Push '.W' into output
+_W
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'W',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    RTS
 
-*____________________END OF SUB________________________________________
+*Push '.L' into output
+_L
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'L',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    RTS
 
+_ELSE
+
+*General operand subroutine for '.B' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
+_B_DN_EA
+    JSR                 _B
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
+
+*General operand subroutine for '.B' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
+_B_EA_DN
+    JSR                 _B
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
+
+*General operand subroutine for '.W' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
+_W_DN_EA
+    JSR                 _W
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
+
+*General operand subroutine for '.W' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
+_W_EA_DN
+    JSR                 _W
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
+
+*General operand subroutine for '.L' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
+_L_DN_EA
+    JSR                 _L
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
+
+*General operand subroutine for '.L' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
+_L_EA_DN
+    JSR                 _L
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
+*-----------------------------------------------------------------------------------------------------------------------
+* GENERAL SUBROUTINES END
+*-----------------------------------------------------------------------------------------------------------------------
+
+*-----------------------------------------------------------------------------------------------------------------------
+* EA
+*-----------------------------------------------------------------------------------------------------------------------
 * Basic idea
 * 000 to 110 so, need to compare with three bits
 * Shift until the the Mode in EA is the last bit    
@@ -1034,7 +1119,7 @@ Calculate_EA_Mode
                
     JSR  EA_Lists  
 
-    RTS * go bacc k to     _Byte_EA_DN 
+    RTS 
     *BRA FINISH  
 *__________________________EA MODE Lists_________________________________________   
 EA_Lists
@@ -1318,258 +1403,8 @@ Register_110
 Register_111
     MOVE.B  #'7',   (A2)+   * push it in this program ending memory
     RTS 
-*______________________END OF SUB EA_____________________________________________
-
 *-----------------------------------------------------------------------------------------------------------------------
-* CMP
-*-----------------------------------------------------------------------------------------------------------------------
-_CMP
-    MOVE.B  #'C',   (A2)+  
-    MOVE.B  #'M',   (A2)+   
-    MOVE.B  #'P',   (A2)+
-    MOVE.W  (A5)+,   D2
-    MOVE.W  D2, D6
-    ANDI.W  #$01C0, D6
-    CMP.W   #$0000, D6 
-    BEQ     _B_EA_DN  
-    CMP.W   #$0040, D6  
-    BEQ     _W_EA_DN 
-    CMP.W   #$0080,  D6      
-    BEQ     _L_EA_DN  
-    BRA     INVALID_OPCODE
-*-----------------------------------------------------------------------------------------------------------------------
-* CMP END
-*-----------------------------------------------------------------------------------------------------------------------
-
-*-----------------------------------------------------------------------------------------------------------------------
-* AND
-*-----------------------------------------------------------------------------------------------------------------------
-_AND
-    MOVE.B  #'A',   (A2)+  
-    MOVE.B  #'N',   (A2)+   
-    MOVE.B  #'D',   (A2)+   
-    MOVE.W  (A5)+,   D2
-    MOVE.W  D2, D6
-    ANDI.W  #$01C0, D6
-    CMP.W   #$0000, D6 
-    BEQ     _B_EA_DN  
-    CMP.W   #$0100, D6  
-    BEQ     _B_DN_EA
-    CMP.W   #$0040, D6  
-    BEQ     _W_EA_DN 
-    CMP.W   #$0140, D6  
-    BEQ     _W_DN_EA
-    CMP.W   #$0080,  D6      
-    BEQ     _L_EA_DN  
-    CMP.W   #$0180, D6  
-    BEQ     _L_DN_EA
-    BRA     INVALID_OPCODE
-*-----------------------------------------------------------------------------------------------------------------------
-* AND END
-*-----------------------------------------------------------------------------------------------------------------------
-
-*-----------------------------------------------------------------------------------------------------------------------
-* OR
-*-----------------------------------------------------------------------------------------------------------------------
-_OR
-    MOVE.B  #' ',   (A2)+  
-    MOVE.B  #'O',   (A2)+   
-    MOVE.B  #'R',   (A2)+   
-    MOVE.W  (A5)+,   D2
-    MOVE.W  D2, D6
-    ANDI.W  #$01C0, D6
-    CMP.W   #$0000, D6 
-    BEQ     _B_EA_DN  
-    CMP.W   #$0100, D6  
-    BEQ     _B_DN_EA
-    CMP.W   #$0040, D6  
-    BEQ     _W_EA_DN 
-    CMP.W   #$0140, D6  
-    BEQ     _W_DN_EA
-    CMP.W   #$0080,  D6      
-    BEQ     _L_EA_DN  
-    CMP.W   #$0180, D6  
-    BEQ     _L_DN_EA
-    BRA     INVALID_OPCODE
-*-----------------------------------------------------------------------------------------------------------------------
-* OR END
-*-----------------------------------------------------------------------------------------------------------------------
-
-*-----------------------------------------------------------------------------------------------------------------------
-* ADD
-*-----------------------------------------------------------------------------------------------------------------------
-_ADD
-    MOVE.B  #'A',   (A2)+  
-    MOVE.B  #'D',   (A2)+   
-    MOVE.B  #'D',   (A2)+   
-    MOVE.W  (A5)+,   D2
-    MOVE.W  D2, D6
-    ANDI.W  #$01C0, D6
-    CMP.W   #$0000, D6 
-    BEQ     _B_EA_DN  
-    CMP.W   #$0100, D6  
-    BEQ     _B_DN_EA
-    CMP.W   #$0040, D6  
-    BEQ     _W_EA_DN 
-    CMP.W   #$0140, D6  
-    BEQ     _W_DN_EA
-    CMP.W   #$0080,  D6      
-    BEQ     _L_EA_DN  
-    CMP.W   #$0180, D6  
-    BEQ     _L_DN_EA
-    BRA     INVALID_OPCODE
-*-----------------------------------------------------------------------------------------------------------------------
-* ADD END
-*-----------------------------------------------------------------------------------------------------------------------
-
-*-----------------------------------------------------------------------------------------------------------------------
-* GENERAL SUBROUTINES
-*-----------------------------------------------------------------------------------------------------------------------
-*Clear all 8 data registers
-_CLEAR_DN
-    CLR.L   D0
-    CLR.L   D1
-    CLR.L   D2
-    CLR.L   D3
-    CLR.L   D4
-    CLR.L   D5
-    CLR.L   D6
-    CLR.L   D7
-    RTS
-
-*Push '.B' into output
-_B
-    MOVE.B  #'.',       (A2)+
-    MOVE.B  #'B',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    RTS
-
-*Push '.W' into output
-_W
-    MOVE.B  #'.',       (A2)+
-    MOVE.B  #'W',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    RTS
-
-*Push '.L' into output
-_L
-    MOVE.B  #'.',       (A2)+
-    MOVE.B  #'L',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    MOVE.B  #' ',       (A2)+
-    RTS
-
-*General operand subroutine for '.B' and Dn,<ea>
-*Used by: ADD, AND, CMP, OR, SUB
-_B_DN_EA
-    JSR                 _B
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    MOVE.B  #',',       (A2)+ 
-    JSR                 Calculate_EA_Mode
-    RTS
-
-*General operand subroutine for '.B' and <ea>,Dn
-*Used by: ADD, AND, CMP, OR, SUB
-_B_EA_DN
-    JSR                 _B
-    JSR                 Calculate_EA_Mode
-    MOVE.B  #',',       (A2)+ 
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    RTS
-
-*General operand subroutine for '.W' and Dn,<ea>
-*Used by: ADD, AND, CMP, OR, SUB
-_W_DN_EA
-    JSR                 _W
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    MOVE.B  #',',       (A2)+ 
-    JSR                 Calculate_EA_Mode
-    RTS
-
-*General operand subroutine for '.W' and <ea>,Dn
-*Used by: ADD, AND, CMP, OR, SUB
-_W_EA_DN
-    JSR                 _W
-    JSR                 Calculate_EA_Mode
-    MOVE.B  #',',       (A2)+ 
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    RTS
-
-*General operand subroutine for '.L' and Dn,<ea>
-*Used by: ADD, AND, CMP, OR, SUB
-_L_DN_EA
-    JSR                 _L
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    MOVE.B  #',',       (A2)+ 
-    JSR                 Calculate_EA_Mode
-    RTS
-
-*General operand subroutine for '.L' and <ea>,Dn
-*Used by: ADD, AND, CMP, OR, SUB
-_L_EA_DN
-    JSR                 _L
-    JSR                 Calculate_EA_Mode
-    MOVE.B  #',',       (A2)+ 
-    MOVE.B  #'D',       (A2)+
-    MOVE.W  D2,         D4  
-    ANDI.W  #$0E00,     D4
-    LSR.W   #4,         D4
-    LSR.W   #4,         D4 
-    LSR.W   #1,         D4  
-    MOVE.W  D4,         D5
-    MOVE.W  D4,         D3
-    ANDI.W  #$0007,     D4
-    JSR                 Register_Lists
-    RTS
-*-----------------------------------------------------------------------------------------------------------------------
-* GENERAL SUBROUTINES END
+* EA END
 *-----------------------------------------------------------------------------------------------------------------------
 
 _LSL_ASR
@@ -1831,61 +1666,7 @@ SmallLetter
         BLE Invalid
         SUB.B   #$57,   D2    
         RTS
-EA
-    CMP.B #0, D4
-    BEQ PRINT_DATA_REG1 
-       
-    CMP.B #1, D4 
-    BEQ PRINT_ADDRESS_REG1
-
-    CMP.B  #2, D4
-    BEQ PRINT_PAREN_ADDRESS_REG1
     
-    CMP.B  #3, D4
-    BEQ PRINT_INCRE_ADDRESS_REG1
-
-    CMP.W #$4, D4
-    BEQ PRINT_DECRE_ADDRESS_REG1
-    
-    CMP.W #$7,D4
-    BEQ PRINT_ABSOLUTE_IMMEDIATE_DATA1
-*don't use. check PRINT_ABSOLUTE_IMMEDIATE_DATA1 
-PRINT_ABSOLUTE_IMMEDIATE_DATA                    
-    CMP.B #4, D5
-    BEQ PRINT_IMMEDIATE_DATA
-    
-    CMP.B #0, D5
-    BEQ PRINT_ABSOLUTE_ADDRESS
-    CMP.B #1, D5
-    BEQ PRINT_ABSOLUTE_ADDRESS
-    
-    BRA INVALID_OPCODE
-
-
-PRINT_IMMEDIATE_DATA 
-    *if size is byte or word
-    CMP.B   #2, D1
-    BEQ     READLONGWORD
-    
-    *if size is byte or word
-    MOVE.W  (A5)+, (A2)+
-    RTS
-    
-    *if size is long word
-READLONGWORD    
-    MOVE.L  (A5)+, (A2)+
-    RTS
-    
-PRINT_ABSOLUTE_ADDRESS    
-    CMP.B #0, D5
-    BNE LONGWORD_ADDR
-    MOVE.W  (A5)+, (A2)+
-    RTS
-LONGWORD_ADDR
-    MOVE.L  (A5)+, (A2)+
-    RTS
-    
-
 *____________________PRINT_DATA_REG____________FIXED_________________________       
 PRINT_DATA_REG
     ADD.B  #1, MoveInstructionCounter      
