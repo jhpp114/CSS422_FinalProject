@@ -688,20 +688,20 @@ _BXX
     CLR.L   D7  
 * clear out before use
     MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
-    MOVE.W  D2, D6    
-    ROL.W   #4, D6  
+    MOVE.W  D2, D6        * transfer clean data to d6   
+    ROL.W   #4, D6          * shift 4 (condition in front)  
 
     MOVE.W  D6, D5    
-    ROL.W   #4, D6  
-    MOVE.W  D6, D5  
-    ANDI.W  #$000F, D6  
-    CMP.W   #$F,    D6         
+    ROL.W   #4, D6        * clear out 00s just to check condition   
+    MOVE.W  D6, D5        * store it for safety 
+    ANDI.W  #$000F, D6     * check condition    
+    CMP.W   #$F,    D6     * 1111 then BLE      
     BEQ _BLE
-    CMP.W   #$E,    D6  
+    CMP.W   #$E,    D6     * 1110 then BGT  
     BEQ _BGT
-    CMP.W   #$4,    D6  
+    CMP.W   #$4,    D6     * 0100 then BCC   
     BEQ _BCC
-    BRA INVALID_OPCODE  
+    BRA INVALID_OPCODE      * else invalid  
  
         
 _BCC
@@ -713,19 +713,19 @@ _BCC
     BRA BXX_Displacement 
     
 _BLE
-    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program 
     MOVE.B  #'L',   (A2)+   
     MOVE.B  #'E',   (A2)+  
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #' ',   (A2)+   * little space
+    MOVE.B  #' ',   (A2)+   * little space
     BRA  BXX_Displacement   
         
 _BGT
-    MOVE.B  #'B',   (A2)+   
+    MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program 
     MOVE.B  #'G',   (A2)+   
     MOVE.B  #'T',   (A2)+  
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+  
+    MOVE.B  #' ',   (A2)+   * little space
+    MOVE.B  #' ',   (A2)+    * little space
     BRA BXX_Displacement
 
 BXX_Displacement    
