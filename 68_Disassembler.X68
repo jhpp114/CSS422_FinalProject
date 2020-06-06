@@ -2368,31 +2368,31 @@ Input_Error_Handler
         BRA Invalid 
         
 Invalid 
-        LEA Extra_Space,    A1  
+        LEA Extra_Space,    A1  * give extra space  
         MOVE.B  #14,    D0  
         TRAP    #15 
-        LEA Mes_Invalid, A1 
+        LEA Mes_Invalid, A1 * print invalid message 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA  Get_Input_Start_ADR    
+        BRA  Get_Input_Start_ADR    * go back to obtain starting adr    
         
 Invalid_Starting_Ending_Adr
-        LEA  Extra_Space,   A1  
+        LEA  Extra_Space,   A1  * give extra space  
         MOVE.B  #14,    D0  
         TRAP    #15 
-        LEA Mes_Starting_Ending_Adr_Error,  A1  
+        LEA Mes_Starting_Ending_Adr_Error,  A1  * print invalid message 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA Get_Input_Start_ADR
+        BRA Get_Input_Start_ADR     * go back to obatin staring adr 
          
 Invalid_Adr_Not_Even
-        LEA Extra_Space,    A1  
+        LEA Extra_Space,    A1   * give extra space 
         MOVE.B  #14,    D0  
         TRAP    #15 
-        LEA Mes_EvenNumber_Error,   A1  
+        LEA Mes_EvenNumber_Error,   A1   * print invalid message    
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA Get_Input_Start_ADR 
+        BRA Get_Input_Start_ADR     * go back to obtain starting adr 
     
 *__________________________Keep Decode after 25_________________________________    
 ToContinueProgram
@@ -2453,6 +2453,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
