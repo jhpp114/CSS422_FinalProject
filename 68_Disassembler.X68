@@ -876,7 +876,7 @@ _Byte_EA_DN
     * land it on here   
     MOVE.B  #',',     (A2)+     * push it in this program ending memory
     MOVE.B  #'D',    (A2)+   *Always D   
-    MOVE.W  D2,   D4    
+    MOVE.W  D2,   D4        *   restore value from d2   
     ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field    
     LSR.W   #4, D4      
     LSR.W   #4, D4  
@@ -890,98 +890,98 @@ _Byte_EA_DN
     RTS 
    
 _Word_EA_DN
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+   
-    MOVE.B  #'W',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'W',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
     JSR Calculate_EA_Mode
     *   Apply Same logic with Byte_EA_DN  
     MOVE.B  #',',    (A2)+   
     MOVE.B  #'D',    (A2)+    
     MOVE.W  D2, D4
-    ANDI.W  #$0E00, D4  
-    LSR.W   #4, D4  
-    LSR.W   #4, D4  
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
+    LSR.W   #4, D4      * move the regsiter bit to left 
+    LSR.W   #4, D4      * move the resgister bit to left    
     LSR.W   #1, D4  
-    MOVE.W  D4, D5  
+    MOVE.W  D4, D5      * store register safe   
     
-    MOVE.W  D4, D3
+    MOVE.W  D4, D3      * store register safe   
     
-    ANDI.W  #$0007, D4  
+    ANDI.W  #$0007, D4  * determine the resgister by And 0111       
     JSR Register_Lists  
     RTS 
       
 
 _Longword_EA_DN
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+   
-    MOVE.B  #'L',   (A2)+    
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'L',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
     JSR Calculate_EA_Mode   
     *   Apply Same logic with Byte_EA_DN    
     MOVE.B  #',',   (A2)+   
     MOVE.B  #'D',   (A2)+   
     MOVE.W  D2, D4  
-    ANDI.W  #$0E00, D4  
-    LSR.W   #4, D4  
-    LSR.W   #4, D4  
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
+    LSR.W   #4, D4      * move the resgister bit to left  
+    LSR.W   #4, D4      * move the resgister bit to left  
     LSR.W   #1, D4  
-    MOVE.W  D4, D5  
+    MOVE.W  D4, D5      * store register safe
     
-    MOVE.W  D4, D3
+    MOVE.W  D4, D3      * store register safe
     
-    ANDI.W  #$0007, D4 
+    ANDI.W  #$0007, D4  * determine the resgister by And 0111 
     JSR Register_Lists  
     RTS
 
 *   sub.b x, Dx 
 _Byte_DN_EA
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #'D',   (A2)+  
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
     * Apply Opposite way compare to EA-DN  
     MOVE.W  D2, D4   
     *MOVE.W  D
-    ANDI.W  #$0E00, D4  
-    LSR.W   #4, D4  
-    LSR.W   #4, D4  
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
+    LSR.W   #4, D4      * move the resgister bit to left
+    LSR.W   #4, D4      * move the resgister bit to left
     LSR.W   #1, D4  
-    MOVE.W  D4, D5
+    MOVE.W  D4, D5      * store register safe
   
-    MOVE.W  D4, D3
+    MOVE.W  D4, D3      * store register safe
     
-    ANDI.W  #$0007, D4 
-    MOVE.W  D2, D3  
-    ROL.W   #4, D3  
+    ANDI.W  #$0007, D4  * determine the resgister by And 0111
+    MOVE.W  D2, D3      * store orignial value data 
+    ROL.W   #4, D3      * first word bit will go to end to prepare register_list    
     JSR Register_Lists  
     MOVE.B  #',',    (A2)+      
     JSR Calculate_EA_Mode
     RTS 
        
 _Word_DN_EA
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+   
-    MOVE.B  #'W',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #'D',   (A2)+  
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'W',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
     * Apply Opposite way compare to EA-DN  
     MOVE.W  D2, D4   
     *MOVE.W  D
-    ANDI.W  #$0E00, D4  
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
     LSR.W   #4, D4  
     LSR.W   #4, D4  
     LSR.W   #1, D4  
@@ -998,18 +998,18 @@ _Word_DN_EA
     RTS  
 
 _Longword_DN_EA
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+   
-    MOVE.B  #'L',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #'D',   (A2)+  
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'L',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'D',   (A2)+    * push it in this program ending memory
     * Apply Opposite way compare to EA-DN  
     MOVE.W  D2, D4   
     *MOVE.W  D
-    ANDI.W  #$0E00, D4  
+    ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field
     LSR.W   #4, D4  
     LSR.W   #4, D4  
     LSR.W   #1, D4  
@@ -1035,13 +1035,13 @@ _Longword_DN_EA
 *  001 and 111 - > 001
 *  010 and 111 -> 010 etc etc 
 Calculate_EA_Mode   
-    MOVE.W  D2, D3  * move data value to d3 for shifting purpose
-    ROL.W   #4, D3  * Shift
-    ROL.W   #3, D3  
-    ROL.W   #3, D3  
-    ROL.W   #3, D3    
-    MOVE.W  D3, D4    
-    ANDI.W  #$0007, D3  * check last 3 bits which is mode   
+    MOVE.W  D2, D3  * move data value to d3 for shifting purpose (original data)    
+    ROL.W   #4, D3  * Shift 4   Goal is to get EA MODE  
+    ROL.W   #3, D3  * Shift 3  
+    ROL.W   #3, D3  * Shift 3   
+    ROL.W   #3, D3  * Shift 3     
+    MOVE.W  D3, D4  *  Save shifted value just for safe   
+    ANDI.W  #$0007, D3  * check last 3 bits which is mode it is    
                
     JSR  EA_Lists  
 
@@ -1111,58 +1111,58 @@ EA_List_000
     RTS 
 * Apply same logic as EA_List_000   
 EA_List_001
-    MOVE.B  #'A',   (A2)+   
-    ROL.W   #3, D4  
-    MOVE.W  D4, D3  
-    ANDI.W  #$0007, D4  
+    MOVE.B  #'A',   (A2)+   * push it in this program ending memory
+    ROL.W   #3, D4          * obtain original data    
+    MOVE.W  D4, D3          * store it for safety 
+    ANDI.W  #$0007, D4      *  use AND logic 111 to obtain register ea
     JSR Register_Lists  
     RTS 
     
 EA_List_010
-    MOVE.B  #'(',   (A2)+   
-    MOVE.B  #'A',   (A2)+   
-    ROL.W   #3, D4  
-    MOVE.W  D4, D3  
-    ANDI.W  #$0007, D4  
+    MOVE.B  #'(',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'A',   (A2)+   * push it in this program ending memory
+    ROL.W   #3, D4          * obtain original data
+    MOVE.W  D4, D3          * store it for safety
+    ANDI.W  #$0007, D4      *  use AND logic 111 to obtain register ea
     JSR Register_Lists  
-    MOVE.B  #')',   (A2)+   
+    MOVE.B  #')',   (A2)+   * push it in this program ending memory
     RTS 
     
 EA_List_011
-    MOVE.B  #'(',   (A2)+   
-    MOVE.B  #'A',   (A2)+   
-    ROL.W   #3, D4  
-    MOVE.W  D4, D3  
-    ANDI.W  #$0007, D4  
+    MOVE.B  #'(',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'A',   (A2)+   * push it in this program ending memory
+    ROL.W   #3, D4          * obtain original data
+    MOVE.W  D4, D3          * store it for safety
+    ANDI.W  #$0007, D4      *  use AND logic 111 to obtain register ea
     JSR Register_Lists  
-    MOVE.B  #')',   (A2)+   
-    MOVE.B  #'+',   (A2)+   
+    MOVE.B  #')',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'+',   (A2)+   * push it in this program ending memory
     RTS 
     
 EA_List_100
-    MOVE.B  #'-',   (A2)+   
-    MOVE.B  #'(',   (A2)+   
-    MOVE.B  #'A',   (A2)+   
-    ROL.W   #3, D4  
-    MOVE.W  D4, D3  
-    ANDI.W  #$0007, D4  
+    MOVE.B  #'-',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'(',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'A',   (A2)+   * push it in this program ending memory
+    ROL.W   #3, D4          * obtain original data
+    MOVE.W  D4, D3          * store it for safety
+    ANDI.W  #$0007, D4      *  use AND logic 111 to obtain register ea
     JSR Register_Lists  
-    MOVE.B  #')',   (A2)+   
+    MOVE.B  #')',   (A2)+   * push it in this program ending memory
     RTS 
 
 *   I do not know How to handle this....
 *   Maybe just put invalid data?    
 EA_List_101
-    BRA INVALID_OPCODE 
+    BRA INVALID_OPCODE      * just invalid  
 
 EA_List_110
-    BRA INVALID_OPCODE 
+    BRA INVALID_OPCODE      * just invalid    
     
 
 EA_List_111    
-    ROL.W   #3, D4  
-    MOVE.W  D4, D3
-    ANDI.W  #$0007, D4  
+    ROL.W   #3, D4      * obtain original data     
+    MOVE.W  D4, D3      * store it for safety   
+    ANDI.W  #$0007, D4  *  use AND logic 111 to obtain register ea  
     JSR Register_Lists   
     RTS  
     
@@ -1238,11 +1238,11 @@ Just_Zero
     RTS   
       
 Register_001    
-    MOVE.W  D3, D4  * get the value of memory again  
-    ROL.W   #8, D4  
-    ROL.W   #5, D4  
-    ANDI.W  #$0007, D4    
-    CMP.B   #$7,    D4  
+    MOVE.W  D3, D4  * get the value of memory again  form is regi opmode ea mode ea regi    
+    ROL.W   #8, D4  *  shift so the form now
+    ROL.W   #5, D4  * shift to get register value   
+    ANDI.W  #$0007, D4    * do AND 111 to obtain register   
+    CMP.B   #$7,    D4    *  not equal to 111 then its just one 
     BNE Just_One
     MOVE.B  #0, D4  
     MOVE.B  #'$',   (A2)+   
@@ -1269,14 +1269,14 @@ Number_Convert_Longword_Size
     BRA Letter_Convert_Longword_Size    
 
 Just_One           
-    MOVE.B  #'1',   (A2)+      
+    MOVE.B  #'1',   (A2)+      * push it in this program ending memory
     RTS 
     
 Register_010
-    MOVE.B  #'2',   (A2)+   
+    MOVE.B  #'2',   (A2)+      * push it in this program ending memory
     RTS 
 Register_011
-    MOVE.B  #'3',   (A2)+   
+    MOVE.B  #'3',   (A2)+      * push it in this program ending memory
     RTS 
 Register_100    
     MOVE.W  D3, D4  
