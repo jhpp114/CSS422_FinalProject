@@ -1201,17 +1201,17 @@ Register_Lists
     CMP.W   #7, D4  
     BEQ Register_111     
 Resgister_000
-    MOVE.W  D3, D4  
-    ROL.W   #8, D4  
-    ROL.W  #5, D4     
-    ANDI.W  #$0007, D4  
+    MOVE.W  D3, D4      * obtain original value to D4   
+    ROL.W   #8, D4      * shift to gain register      
+    ROL.W  #5, D4       * shift to gain register    
+    ANDI.W  #$0007, D4  * prepare to compare with 7 (111)   
     CMP.B   #$7,    D4  
-    BNE Just_Zero   
-    MOVE.B  #0, D4  
-    MOVE.B  #'$',   (A2)+   
+    BNE Just_Zero       * not equal just print 0    
+    MOVE.B  #0, D4      *   set up counter 0 at d4  
+    MOVE.B  #'$',   (A2)+       * push it in this program ending memory 
     MOVE.W  (A5)+,  D3  * increase word size address and store it in D3 
-    CLR.L   D1  * clear d1 to use as a counter  
-    MOVE.B  #4, D1   
+    CLR.L   D1          * clear d1 to use as a counter  
+    MOVE.B  #4, D1      * set up counter at d1  
     JSR GetWord_Value   
     RTS 
     
@@ -1222,7 +1222,7 @@ GetWord_Value
     ANDI.L  #$0000000F, D7     
     CMPI.B  #$09,   D7      
     BLE Number_Convert_Word_Size      
-    ADDI.B  #$37,   D7 
+    ADDI.B  #$37,   D7      * (letter)  
 Letter_Convert_Word_Size    
     ADDI.B  #1, D4  * increase counter    
     MOVE.B  D7, (A2)+   * push the char into  end addres    
@@ -1230,27 +1230,29 @@ Letter_Convert_Word_Size
         BLT GetWord_Value   * less go back  
         RTS 
 Number_Convert_Word_Size  
-    ADDI.B  #$30,   D7  * add 30 ascii stuffs   
+    ADDI.B  #$30,   D7  * add 30 ascii stuffs  (num)     
     BRA Letter_Convert_Word_Size    
     
 Just_Zero   
-    MOVE.B  #'0',    (A2)+  
+    MOVE.B  #'0',    (A2)+  * push it in this program ending memory
     RTS   
       
 Register_001    
     MOVE.W  D3, D4  * get the value of memory again  form is regi opmode ea mode ea regi    
-    ROL.W   #8, D4  *  shift so the form now
+    ROL.W   #8, D4  *  shift so the form now    
     ROL.W   #5, D4  * shift to get register value   
     ANDI.W  #$0007, D4    * do AND 111 to obtain register   
     CMP.B   #$7,    D4    *  not equal to 111 then its just one 
     BNE Just_One
-    MOVE.B  #0, D4  
-    MOVE.B  #'$',   (A2)+   
+    MOVE.B  #0, D4          * set counter 0 at d4   
+    MOVE.B  #'$',   (A2)+   * push it in this program ending memory
     MOVE.L  (A5)+,  D3  *   increase long word size address 
     CLR.L   D1  * clear d1 to use as a counter  
-    MOVE.B  #8, D1  
+    MOVE.B  #8, D1          * set counter at d1 (8 cause 8 digit longword)  
     JSR GetLongword_Value   
     RTS  
+    
+*   Same logic applies with word function located at above  
 GetLongword_Value
     ROL.L   #4, D3    
     MOVE.L  D3, D7  
@@ -1280,14 +1282,14 @@ Register_011
     RTS 
 Register_100    
     MOVE.W  D3, D4  
-    ROL.W   #8, D4  
-    ROL.W  #5, D4     
-    ANDI.W  #$0007, D4  
-    CMP.B   #$7,    D4  
+    ROL.W   #8, D4          * shift so the form now 
+    ROL.W  #5, D4           * shift to get register value
+    ANDI.W  #$0007, D4      * do AND 111 to obtain register
+    CMP.B   #$7,    D4      *  not equal to 111 then its just four  
     BNE Just_Four   
-    MOVE.B  #0, D4  
-    MOVE.B  #'#',   (A2)+   
-    MOVE.B  #'$',   (A2)+   
+    MOVE.B  #0, D4          *  set up counter 0 at d4   
+    MOVE.B  #'#',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'$',   (A2)+   * push it in this program ending memory
     
     MOVE.W  D3, D7  * to determine the size to decide long or word immediate data   
     ROL.W   #4, D7  
@@ -1315,17 +1317,17 @@ word_100
     RTS 
 
 Just_Four
-    MOVE.B  #'4',   (A2)+   
+    MOVE.B  #'4',   (A2)+   * push it in this program ending memory
     RTS 
 
 Register_101
-    MOVE.B  #'5',   (A2)+   
+    MOVE.B  #'5',   (A2)+   * push it in this program ending memory
     RTS 
 Register_110
-    MOVE.B  #'6',   (A2)+   
+    MOVE.B  #'6',   (A2)+   * push it in this program ending memory
     RTS 
 Register_111
-    MOVE.B  #'7',   (A2)+   
+    MOVE.B  #'7',   (A2)+   * push it in this program ending memory
     RTS 
 *______________________END OF SUB EA_____________________________________________
 
