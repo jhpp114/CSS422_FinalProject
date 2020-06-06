@@ -627,7 +627,7 @@ RTS
     CMP.W   #$4E75, D4  * just print RTS    
     BEQ Print_RTS  
     * Below added for invalid_________________
-    CMP.W   #$4E75, D4  
+    CMP.W   #$4E75, D4  * compare directly  
     BNE INVALID_OPCODE
     * not equal then simply throw error 
 Print_RTS   
@@ -664,15 +664,15 @@ LEA
     CMP.W   #$0002, D3      
     BEQ Print_LEA   
 Print_LEA   
-    MOVE.B  #'L',   (A2)+   
-    MOVE.B  #'E',   (A2)+   
-    MOVE.B  #'A',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'L',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'E',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'A',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
     JSR EA_Lists    
-    MOVE.B  #',',   (A2)+    
-    CLR.L   D4    
-    MOVE.W  D2, D4    
-    ROL.L   #4, D4    
+    MOVE.B  #',',   (A2)+    * push it in this program ending memory
+    CLR.L   D4               * clear out d4 
+    MOVE.W  D2, D4           * obtain data stored in the memory 
+    ROL.L   #4, D4           *  prepare to just directly go to EA_List_001, for an register 
     JSR EA_List_001 * go to A
     RTS 
 *______________________END OF LEA JSR RTS___________________
@@ -2452,6 +2452,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
