@@ -582,42 +582,42 @@ JSR
     BEQ Print_JSR_111_001   
     * rest its invalid   
 Print_JSR_010   
-    MOVE.B  #'J',   (A2)+   
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'R',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'J',   (A2)+   * push it in this program ending memory    
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'R',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
     * shift 3 bits to check if it is 010    
-    CLR.L   D4 
-    CLR.L   D3   
+    CLR.L   D4  * clear d4
+    CLR.L   D3  * clear d3 
     MOVE.W  D2, D3  
-    ROR.W   #3, D3    
+    ROR.W   #3, D3    * shift register field to the front to make mode is the last 3 bits   
     MOVE.W  D3, D4  
     ANDI.W  #$0002, D4 * to check xxxx xxxx xx01 ?xxx, ? should be 0    
-    CMP.W  #$0002, D4       
-    BNE Finish * invalid    
-    CLR.L   D4  
+    CMP.W  #$0002, D4       * check if last two bits are 10 if not invalid not 010  
+    BNE INVALID_OPCODE * if not just invalid    
+    CLR.L   D4  * after check clear d4  
     MOVE.W  D2, D4  
-    ROR.W   #3, D4  
+    ROR.W   #3, D4  * shift 3 bits to the end from front just to get prepare for EA_List  
     JSR EA_List_010  
     RTS 
 Print_JSR_111_000   
-    MOVE.B  #'J',   (A2)+   
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'R',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    CLR.L   D4  
-    MOVE.W  D2, D4  
-    ROR.W   #3, D4  
+    MOVE.B  #'J',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #'R',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory 
+    CLR.L   D4              * clear d4  
+    MOVE.W  D2, D4          * obtain value  
+    ROR.W   #3, D4          * shift 3 bits to the end from front just to get prepare for EA_List
     JSR EA_List_111 
     RTS 
 Print_JSR_111_001   
-    MOVE.B  #'J',   (A2)+   
-    MOVE.B  #'S',   (A2)+   
-    MOVE.B  #'R',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    CLR.L   D4
-    MOVE.W  D2, D4  
-    ROR.W   #3, D4  
+    MOVE.B  #'J',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #'R',   (A2)+   * push it in this program ending memory 
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory 
+    CLR.L   D4              * clear d4 
+    MOVE.W  D2, D4          * obtain value
+    ROR.W   #3, D4          * shift 3 bits to the end from front just to get prepare for EA_List
     JSR EA_List_111 
     RTS 
 *_________________RTS_______________________________
@@ -2452,6 +2452,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
