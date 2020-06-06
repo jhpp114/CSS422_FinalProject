@@ -1,18 +1,20 @@
 *-----------------------------------------------------------
-* Title      : 68k   Disassembler    
-* Written by :
-* Date       : 06/xx/2020    
-* Description: Final Project    
+* Title       : 68k Disassembler    
+* Written by  : Yang Hu, Matt Johnson, Jun Park
+* Date        : 06/06/2020    
+* Version     : v1.0
+* Description : Final project for CSS 422. Disassembles sets of machine code (see documentation) into human readable code.
 *-----------------------------------------------------------
-    ORG    $1000
-START:                  ; first instruction of program
 
-* Put program code here
+*Disassembler takes memory $1000-$xxxx
+    ORG    $1000
+
+START:
 *_______Basic Print Out Welcome Message__________  
     MOVE.B  #0, ProgramCounter * added to test sub and end program  
-    LEA Mes_Welcome,    A1  
-    MOVE.B  #13,    D0  
-    TRAP    #15 
+    LEA Mes_Welcome,    A1
+    MOVE.B  #13,    D0
+    TRAP    #15
     
 *_______Get User Input____________________________
 Get_Input_Start_ADR
@@ -73,14 +75,7 @@ Check_Input_Address
     BGE Invalid_Starting_Ending_Adr
     
     *___________Clear All Unnecessary register____________________________  
-    CLR.L   D2 
-    CLR.L   D3  
-    CLR.L   D0  *  clear d0 before use it in disassemble
-    CLR.L   D1 
-    CLR.L   D4  
-    CLR.L   D5  
-    CLR.L   D6  
-    CLR.L   D7   
+    JSR     _CLEAR_DN  
     MOVE.L  #$00000000, A1  
     MOVE.L  #$00000000, A2    
     MOVE.L  #$00000000, A3    
@@ -94,18 +89,11 @@ CheckProgramCounter
     JSR ToContinueProgram 
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
-    BEQ Finish  
+    BEQ FINISH  
     ADD.B   #1, ProgramCounter
     MOVE.B  #0, MoveInstructionCounter
 *   Clear Loop  
-    CLR.L   D2 
-    CLR.L   D3  
-    CLR.L   D0  *  clear d0 before use it in disassemble
-    CLR.L   D1 
-    CLR.L   D4  
-    CLR.L   D5  
-    CLR.L   D6  
-    CLR.L   D7   
+    JSR     _CLEAR_DN   
     MOVE.L  #$00000000, A1  
     MOVE.L  #$00000000, A2    
     MOVE.L  #$00000000, A3    
@@ -123,7 +111,7 @@ Disassemble_Loop
     * 00000000000000000000000000000000000
     MOVE.B  #0, MoveInstructionCounter  
     *________Before BRA FINISH is for testin purpose_________
-    *BRA Finish  *   Finish for now for testing purpose  
+    *BRA FINISH  *   FINISH for now for testing purpose  
     *________________________________________________________
        *BRA Disassemble_Loop    
     BRA CheckProgramCounter
@@ -143,7 +131,6 @@ Disassemble                     * while A5 is less than A6
         BGE OUTPUT_RESULT
         CLR.L   D1  
         MOVE.B (A5), D1        * read a byte from from A5, store to D1. This contains opcode
-         
         *valid opcode bits cases: 10-EF
         CMP.W   #$10, D1             
         BLT    INVALID_OPCODE   * invalid, need to move on to the next word
@@ -632,10 +619,10 @@ RTS
     CMP.W   #$4E75, D4  * compare directly  
     BNE INVALID_OPCODE
     * not equal then simply throw error 
-Print_RTS   
+Print_RTS
     MOVE.B  #'R',           (A2)+     
     MOVE.B  #'T',           (A2)+      
-    MOVE.B #'S',    (A2)+   
+    MOVE.B  #'S',           (A2)+   
     RTS 
 *______________RTS End_____________________________        
 LEA 
@@ -826,7 +813,7 @@ IS_LET
     MOVE.B  D4, (A2)+   
     CMP.B   D3, D7    
     BLT Ascii_Convert_BXX
-    RTS 
+    RTS
 
 *___________________END OF B brothers__________________________ 
 
@@ -1048,7 +1035,7 @@ Calculate_EA_Mode
     JSR  EA_Lists  
 
     RTS * go bacc k to     _Byte_EA_DN 
-    *BRA Finish  
+    *BRA FINISH  
 *__________________________EA MODE Lists_________________________________________   
 EA_Lists
     CMP.W   #$000,  D3  
@@ -1333,7 +1320,9 @@ Register_111
     RTS 
 *______________________END OF SUB EA_____________________________________________
 
-*______________________CMP______________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* CMP
+*-----------------------------------------------------------------------------------------------------------------------
 _CMP
     MOVE.B  #'C',   (A2)+  
     MOVE.B  #'M',   (A2)+   
@@ -1348,9 +1337,13 @@ _CMP
     CMP.W   #$0080,  D6      
     BEQ     _L_EA_DN  
     BRA     INVALID_OPCODE
-*____________________END OF CMP________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* CMP END
+*-----------------------------------------------------------------------------------------------------------------------
 
-*______________________AND______________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* AND
+*-----------------------------------------------------------------------------------------------------------------------
 _AND
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'N',   (A2)+   
@@ -1371,9 +1364,13 @@ _AND
     CMP.W   #$0180, D6  
     BEQ     _L_DN_EA
     BRA     INVALID_OPCODE
-*____________________END OF AND________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* AND END
+*-----------------------------------------------------------------------------------------------------------------------
 
-*______________________OR______________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* OR
+*-----------------------------------------------------------------------------------------------------------------------
 _OR
     MOVE.B  #' ',   (A2)+  
     MOVE.B  #'O',   (A2)+   
@@ -1394,9 +1391,13 @@ _OR
     CMP.W   #$0180, D6  
     BEQ     _L_DN_EA
     BRA     INVALID_OPCODE
-*____________________END OF OR________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* OR END
+*-----------------------------------------------------------------------------------------------------------------------
 
-*______________________ADD_____________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* ADD
+*-----------------------------------------------------------------------------------------------------------------------
 _ADD
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'D',   (A2)+   
@@ -1417,9 +1418,26 @@ _ADD
     CMP.W   #$0180, D6  
     BEQ     _L_DN_EA
     BRA     INVALID_OPCODE
-*____________________END OF ADD________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* ADD END
+*-----------------------------------------------------------------------------------------------------------------------
 
-*______________________GENERAL ROUTINES______________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* GENERAL SUBROUTINES
+*-----------------------------------------------------------------------------------------------------------------------
+*Clear all 8 data registers
+_CLEAR_DN
+    CLR.L   D0
+    CLR.L   D1
+    CLR.L   D2
+    CLR.L   D3
+    CLR.L   D4
+    CLR.L   D5
+    CLR.L   D6
+    CLR.L   D7
+    RTS
+
+*Push '.B' into output
 _B
     MOVE.B  #'.',       (A2)+
     MOVE.B  #'B',       (A2)+
@@ -1427,6 +1445,7 @@ _B
     MOVE.B  #' ',       (A2)+
     RTS
 
+*Push '.W' into output
 _W
     MOVE.B  #'.',       (A2)+
     MOVE.B  #'W',       (A2)+
@@ -1434,6 +1453,7 @@ _W
     MOVE.B  #' ',       (A2)+
     RTS
 
+*Push '.L' into output
 _L
     MOVE.B  #'.',       (A2)+
     MOVE.B  #'L',       (A2)+
@@ -1441,6 +1461,8 @@ _L
     MOVE.B  #' ',       (A2)+
     RTS
 
+*General operand subroutine for '.B' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
 _B_DN_EA
     JSR                 _B
     MOVE.B  #'D',       (A2)+
@@ -1457,6 +1479,8 @@ _B_DN_EA
     JSR                 Calculate_EA_Mode
     RTS
 
+*General operand subroutine for '.B' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
 _B_EA_DN
     JSR                 _B
     JSR                 Calculate_EA_Mode
@@ -1473,6 +1497,8 @@ _B_EA_DN
     JSR                 Register_Lists
     RTS
 
+*General operand subroutine for '.W' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
 _W_DN_EA
     JSR                 _W
     MOVE.B  #'D',       (A2)+
@@ -1489,6 +1515,8 @@ _W_DN_EA
     JSR                 Calculate_EA_Mode
     RTS
 
+*General operand subroutine for '.W' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
 _W_EA_DN
     JSR                 _W
     JSR                 Calculate_EA_Mode
@@ -1505,6 +1533,8 @@ _W_EA_DN
     JSR                 Register_Lists
     RTS
 
+*General operand subroutine for '.L' and Dn,<ea>
+*Used by: ADD, AND, CMP, OR, SUB
 _L_DN_EA
     JSR                 _L
     MOVE.B  #'D',       (A2)+
@@ -1521,6 +1551,8 @@ _L_DN_EA
     JSR                 Calculate_EA_Mode
     RTS
 
+*General operand subroutine for '.L' and <ea>,Dn
+*Used by: ADD, AND, CMP, OR, SUB
 _L_EA_DN
     JSR                 _L
     JSR                 Calculate_EA_Mode
@@ -1536,7 +1568,9 @@ _L_EA_DN
     ANDI.W  #$0007,     D4
     JSR                 Register_Lists
     RTS
-*____________________END OF GENERAL ROUTINES________________________________________
+*-----------------------------------------------------------------------------------------------------------------------
+* GENERAL SUBROUTINES END
+*-----------------------------------------------------------------------------------------------------------------------
 
 _LSL_ASR
 *bit 6 and 7 determines memory or register
@@ -1767,9 +1801,9 @@ GoBack
         RTS    
 ConvertASCII
         CMPI.B  #$30,   D2     * Any input that are less than 30 is error    
-        BLT Input_Error_Handler
+        BLT Invalid
         CMPI.B  #$67,   D2    * Any input that are more or equal to 67 (g) is error 
-        BGE Input_Error_Handler  
+        BGE Invalid  
         * 30~39 Number
         * 41~46 Cap Letter Till F
         * 61~66 Till f
@@ -1777,7 +1811,7 @@ ConvertASCII
         BLE IsNumber * If less than 40 then execute  
         *________________________________________________
         CMPI.B  #$40,   D2  *   if it is between 3A (:) and 40 (@) throw Error   
-        BLE Input_Error_Handler
+        BLE Invalid
         *_______________________________________________
         CMPI.B  #$41,   D2  * if not compare with 41 (A)    
         BGE IsLetter    *Bigger than or Equal to 41 then execute    
@@ -1794,7 +1828,7 @@ CapitalLetter
         RTS 
 SmallLetter  
         CMPI.B  #$60,   D2  * if less than or equal to 60 (') throw Error   
-        BLE Input_Error_Handler
+        BLE Invalid
         SUB.B   #$57,   D2    
         RTS
 EA
@@ -2166,31 +2200,19 @@ PRINT_DECRE_ADDRESS_REG1
     RTS
 
 *_________________________Error Handle___________________________________      
-Input_Error_Handler
-        BRA Invalid 
-        
 Invalid 
-        LEA Extra_Space,    A1  * give extra space  
-        MOVE.B  #14,    D0  
-        TRAP    #15 
         LEA Mes_Invalid, A1 * print invalid message 
         MOVE.B  #14,    D0  
         TRAP    #15 
         BRA  Get_Input_Start_ADR    * go back to obtain starting adr    
         
 Invalid_Starting_Ending_Adr
-        LEA  Extra_Space,   A1  * give extra space  
-        MOVE.B  #14,    D0  
-        TRAP    #15 
         LEA Mes_Starting_Ending_Adr_Error,  A1  * print invalid message 
         MOVE.B  #14,    D0  
         TRAP    #15 
         BRA Get_Input_Start_ADR     * go back to obatin staring adr 
          
 Invalid_Adr_Not_Even
-        LEA Extra_Space,    A1   * give extra space 
-        MOVE.B  #14,    D0  
-        TRAP    #15 
         LEA Mes_EvenNumber_Error,   A1   * print invalid message    
         MOVE.B  #14,    D0  
         TRAP    #15 
@@ -2212,7 +2234,7 @@ ToContinueProgram
         CMP.B   #$51,   D1  * if it is Q    
         BEQ END_Program 
         CMP.B   #$71,   D1  * if it is q    
-        BEQ END_Program 
+        BEQ END_Program
         BRA ToContinueProgram   
 ContinueProgram 
         MOVE.B  #0, ProgramCounter  * set  counter to 0 
@@ -2224,38 +2246,42 @@ END_Program
         LEA Mes_TerminateProgram,   A1  * just print out message    
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA Finish  * end program   
+        BRA FINISH  * end program   
     
-Finish  SIMHALT             ; halt simulator
+FINISH  SIMHALT
         
+*-----------------------------------------------------------------------------------------------------------------------
+* VARIABLES
+*-----------------------------------------------------------------------------------------------------------------------
+CR                              EQU     $0D     *   Carriage Return
+LF                              EQU     $0A     *   Line Feed
+Extra_Space                     DC.B    CR, LF, 0
+*Messages
+Mes_Welcome                     DC.B    'Welcome to the Disassembler Program', CR, LF
+                                DC.B    'Final Project for CSS 422',    CR, LF
+                                DC.B    '   Authors:',    CR, LF
+                                DC.B    '       Yang Hu',    CR, LF
+                                DC.B    '       Matt Johnson',    CR, LF
+                                DC.B    '       Jun Park',    CR, LF, 0
+Mes_Start_Adr                   DC.B    'Please enter start address (word): $', 0
+Mes_End_Adr                     DC.B    'Please enter end address (word): $', 0
+Mes_Invalid                     DC.B    'The address you provided is invalid', CR, LF, 0
+Mes_EvenNumber_Error            DC.B    'The address you provided is not an even ending number',  CR, LF, 0
+Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or equal to the end address', CR, LF, 0
+Mes_Continue_Read               DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0
+Mes_TerminateProgram            DC.B    'Ending the program...Bye', CR, LF, 0
+*Storage
+UserInput                       DS.L    1   
+StartLocData                    DS.L    1   *Starting address
+EndLocData                      DS.L    1   *Ending address    
+ProgramCounter                  DS.L    1   
+MoveInstructionCounter          DS.L    1   
+ProgramEnd                      DS.L    1   *Variable to store location where this program ends
+*-----------------------------------------------------------------------------------------------------------------------
+* VARIABLES END
+*-----------------------------------------------------------------------------------------------------------------------
 
-* Put variables and constants here
-* Basic Print Message   
-*____________________________________________________________________
-CR  EQU $0D     *   Carriage Return
-LF  EQU $0A     *   Line Feed
-Extra_Space DC.B    CR, LF, 0 
-Mes_Welcome     DC.B    'Welcome to the Disassembler Program', CR,  LF
-                            DC.B    'Final Project for CSS 422',    CR, LF, 0
-Mes_Start_Adr       DC.B    'Please enter start address (word): $', 0
-Mes_End_Adr     DC.B    'Please enter end address (word): $', 0
-
-Mes_Invalid DC.B   'The address you provided is invalid', CR,  LF,  0   
-            
-Mes_EvenNumber_Error    DC.B    'The address you provided is not an even ending number',  CR, LF, 0
-Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or equal to the end address', CR, LF, 0 
-Mes_Continue_Read   DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0  
-Mes_TerminateProgram DC.B   'Ending the program...Bye', CR, LF, 0     
-
-* Define Storage
-UserInput   DS.L    1   
-StartLocData    DS.L    1   * store starting address
-EndLocData  DS.L    1   *   Store ending address    
-ProgramCounter  DS.L    1   
-MoveInstructionCounter  DS.L    1   
-ProgramEnd DS.L 1   *   variable to store location where this program ends
-
-    END    START        ; last line of source
+                                END     START
 
 *~Font name~Courier New~
 *~Font size~10~
