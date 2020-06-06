@@ -1905,7 +1905,7 @@ Convert_Hex_to_Ascii
     CMP.B   D5, D6  * compare the couter
     BNE Smaller *   Set counter to read 4
     JSR Bigger
-    TRAP #15
+    TRAP #15    * extra space   
     RTS  
         
 Bigger
@@ -1913,40 +1913,39 @@ Bigger
     MOVE.B  #32,    D1  
     RTS 
 Smaller
-    MOVE.B  #0, D3  
-    MOVE.B  #4, D4  
+    MOVE.B  #0, D3  * set counter to 0  
+    MOVE.B  #4, D4  * set counter to 4  
 Read_Each_Char              *   Read Each character 
-    CMP.B   D3, D4  
-    BEQ Save_Char   
-    LSL.L   #1, D2  
-    BCC Append_Zero 
+    CMP.B   D3, D4  * compare the counter 
+    BEQ Save_Char   * 4 then save char  
+    LSL.L   #1, D2   * D2 has the address and do LSL to full register to    
+    BCC Append_Zero * while change to 0, does carry clear   
     ADDI.B  #1, D1  
     BRA Next_Bit  
 
 Append_Zero 
-    ADDI.B  #0, D1  
+    ADDI.B  #0, D1  * append zero because it is 0   
 Next_Bit
-    ADDI.B  #1, D3  
-    LSL.L   #1, D1  
+    ADDI.B  #1, D3  * increase the counter because we read  
+    LSL.L   #1, D1  *  In full register value D1 make a shift 1 (0) 
     BRA Read_Each_Char  
 Save_Char
-    LSR.L   #1, D1  
+    LSR.L   #1, D1  * in the full register value it has single digit of the address 
     CMP.B   #$A,    D1  
     BLT   Convert_Ascii_to_Hex_DisplayAdr 
-    ADDI.B  #$37,   D1  
-    *ADDI.B  #$30,   D1 
-    ADDI.B  #1, D5  
-    MOVE.B  #6, D0  
+    ADDI.B  #$37,   D1  * it is letter  
+    ADDI.B  #1, D5      * increase counter (it is the counter for full memory address counter which should be 8 eventually) 
+    MOVE.B  #6, D0      * trap task display single char    
     TRAP    #15 
-    CLR.L   D1  
+    CLR.L   D1          * clear d1  
     BRA Convert_Hex_to_Ascii
 
 Convert_Ascii_to_Hex_DisplayAdr 
-    ADDI.B  #$30,   D1 
-    ADDI.B  #1, D5  
-    MOVE.B  #6, D0  
+    ADDI.B  #$30,   D1  * it is number  so add 30   
+    ADDI.B  #1, D5      * increase counter (it is the counter for full memory address counter which should be 8)    
+    MOVE.B  #6, D0      *  trap task display single char    
     TRAP    #15 
-    CLR.L   D1  
+    CLR.L   D1  * clear d1  
     BRA Convert_Hex_to_Ascii 
 
 
@@ -2453,6 +2452,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
