@@ -806,6 +806,7 @@ Display_BXX
     CLR.L   D7  
     JSR Ascii_Convert_BXX   
     RTS 
+Display_BXX_Long_Word
      
 Ascii_Convert_BXX
     ROL.W   #4, D5  
@@ -2446,6 +2447,8 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
+
 
 
 
