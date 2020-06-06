@@ -89,6 +89,8 @@ Check_Input_Address
 CheckProgramCounter 
     CMP.B   #25,    ProgramCounter  * check program counter 
     BNE Disassemble_Loop        
+    CMP.L   A5, A6  
+    BEQ REACH_END_ADR 
     JSR ToContinueProgram 
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
@@ -2029,6 +2031,16 @@ END_Program
         CMP.B   #$4E,   D1 *N
         BEQ     FINISH
         BRA     END_Program *Else repeat query
+
+REACH_END_ADR
+        LEA     Extra_Space,    A1  
+        MOVE.B  #14,    D0  
+        TRAP    #15
+        LEA     Mes_Reached_End,    A1
+        MOVE.B  #14,    D0  
+        TRAP    #15 
+        BRA FINISH  
+        
 FINISH *End program
         LEA     Extra_Space,    A1
         MOVE.B  #14,            D0
@@ -2060,6 +2072,7 @@ Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or eq
 Mes_Continue_Read               DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0
 Mes_Run_Again                   DC.B    'Run disassembler again? (y or n).', CR, LF, 0
 Mes_TerminateProgram            DC.B    'Ending the program...Bye', CR, LF, 0
+Mes_Reached_End                 DC.B    'The program reached End Address', CR, LF, 0    
 *Storage
 UserInput                       DS.L    1   
 StartLocData                    DS.L    1   *Starting address
@@ -2072,6 +2085,7 @@ ProgramEnd                      DS.L    1   *Variable to store location where th
 *-----------------------------------------------------------------------------------------------------------------------
 
                                 END     START
+
 
 *~Font name~Courier New~
 *~Font size~10~
