@@ -806,19 +806,17 @@ Display_BXX
     CLR.L   D7  
     JSR Ascii_Convert_BXX   
     RTS 
-Display_BXX_Long_Word
-    * will be implemented
-    
+     
 Ascii_Convert_BXX
     ROL.W   #4, D5  
     MOVE.L  D5, D4  
     ANDI.L  #$0000000F, D4  *   just compare last 4 bits
     CMPI.B  #$09,   D4      *   check is number or letter      
     BLE  IS_NUM 
-    ADDI.B  #$37,   D4
+    ADDI.B  #$37,   D4      * is letter 
     BRA IS_LET   
 IS_NUM  
-    ADDI.B  #$30,   D4  
+    ADDI.B  #$30,   D4      * is nubmer 
     BRA IS_LET  
 IS_LET  
     ADDI.B  #1, D7    
