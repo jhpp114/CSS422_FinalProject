@@ -269,7 +269,7 @@ start   EQU $8000
     AND.B     -(A6),D6
     AND.B     -(A7),D7
     AND.B     $0012,D0
-    AND.B     #$0012,D0 *ERROR
+    AND.B     #$0012,D0
     AND.W     D0,D7
     AND.W     D1,D0
     AND.W     D2,D1
@@ -327,7 +327,7 @@ start   EQU $8000
     AND.W     -(A6),D6
     AND.W     -(A7),D7
     AND.W     $1234,D0
-    AND.W     #$1234,D0 *ERROR
+    AND.W     #$1234,D0
     AND.L     D0,D7
     AND.L     D1,D0
     AND.L     D2,D1
@@ -385,7 +385,7 @@ start   EQU $8000
     AND.L     -(A6),D6
     AND.L     -(A7),D7
     AND.L     $12345678,D0
-    AND.L     #$12345678,D0 *ERROR
+    AND.L     #$12345678,D0
 *-------------------------------------------------------------------------------------------------------------
 * CMP TESTS
 *-------------------------------------------------------------------------------------------------------------
@@ -712,10 +712,6 @@ start   EQU $8000
     OR.L      D0,$12345678
     OR.L      #$12345678,D0
 *-------------------------------------------------------------------------------------------------------------
-* RTS TESTS
-*-------------------------------------------------------------------------------------------------------------
-    RTS
-*-------------------------------------------------------------------------------------------------------------
 * SUB TESTS
 *-------------------------------------------------------------------------------------------------------------
     SUB.B      D0,D7
@@ -776,7 +772,7 @@ start   EQU $8000
     SUB.B      -(A7),D7
     SUB.B      $0012,D0
     SUB.B      D0,$0012
-    SUB.B      #$0012,D0
+    SUB.B      #$0012,D0 *ERROR
     SUB.W      D0,D7
     SUB.W      D1,D0
     SUB.W      D2,D1
@@ -835,7 +831,7 @@ start   EQU $8000
     SUB.W      -(A7),D7
     SUB.W      $1234,D0
     SUB.W      D0,$1234
-    SUB.W      #$1234,D0
+    SUB.W      #$1234,D0 *ERROR
     SUB.L      D0,D7
     SUB.L      D1,D0
     SUB.L      D2,D1
@@ -894,10 +890,358 @@ start   EQU $8000
     SUB.L      -(A7),D7
     SUB.L      $12345678,D0
     SUB.L      D0,$12345678
-    SUB.L      #$12345678,D0
+    SUB.L      #$12345678,D0 *ERROR
+*-------------------------------------------------------------------------------------------------------------
+* MOVE FAMILY TESTS
+*-------------------------------------------------------------------------------------------------------------
+    *MOVE B
+    MOVE.B     #101,D1
+    MOVE.B     $48,D2
+    MOVE.B     #$AA,D1
+    MOVE.B     D4,(A6)+
+    MOVE.B     D2,(A5)
+    MOVE.B     D5,-(A2)
+    MOVE.B     (A1),D4
+    MOVE.B     (A2)+,D3
+    MOVE.B     -(A1),D1
+    MOVE.B     #$44,D2
+    MOVE.B     D0,-(A7)
+    MOVE.B     D0,$E111
+    MOVE.B     D0,$E1234560
+    MOVE.B     (A0)+,(A1)
+    MOVE.B     (A0)+,(A1)+
+    MOVE.B     (A0)+,-(A1)
+    MOVE.B     -(A0),D0
+    MOVE.B     -(A0),(A1)
+    MOVE.B     -(A0),(A1)+
+    MOVE.B     -(A0),-(A1)
+    MOVE.B     $12,D1
+    MOVE.B     $12,(A0)
+    MOVE.B     $12,(A0)+
+    MOVE.B     $12,-(A0)
+    MOVE.B     $1234,D0
+    MOVE.B     $1234,(A1)
+    MOVE.B     $1234,(A1)+
+    MOVE.B     $1234,-(A1)
+    MOVE.B     $12345678,D0
+    MOVE.B     $12345678,(A1)
+    MOVE.B     $12345678,(A1)+
+    MOVE.B     $12345678,-(A1)
+    MOVE.B     #$12,D0
+    MOVE.B     #$12,(A1)
+    MOVE.B     #$12,(A1)+
+    MOVE.B     #$12,-(A1)
+    *MOVE.W
+    MOVE.W     D0,D1 *8
+    MOVE.W     D0,(A0) *9
+    MOVE.W     D0,(A0)+ * 10
+    MOVE.W     D0,-(A0) * 11
+    MOVE.W     A0,D0 * 12
+    MOVE.W     A0,(A1) * 13
+    MOVE.W     A0,(A1)+ * 14
+    MOVE.W     A0,-(A1) * 15
+    MOVE.W     (A0),D0 * 16
+    MOVE.W     (A0),(A1) * 17
+    MOVE.W     (A0),(A1)+ * 18
+    MOVE.W     (A0),-(A1) * 19
+    MOVE.W     (A0)+,D0 * 20
+    MOVE.W     (A0)+,(A1) * 21
+    MOVE.W     (A0)+,(A1)+ * 22
+    MOVE.W     (A0)+,-(A1) * 23
+    MOVE.W     -(A0),D0 * 24
+    MOVE.W     $12,D1
+    MOVE.W     $12,(A0)
+    MOVE.W     $12,(A0)+
+    MOVE.W     $12,-(A0)
+    MOVE.W     $1234,D0
+    MOVE.W     $1234,(A1)
+    MOVE.W     $1234,(A1)+
+    MOVE.W     $1234,-(A1)
+    MOVE.W     $12345678,D0
+    MOVE.W     $12345678,(A1)
+    MOVE.W     $12345678,(A1)+
+    MOVE.W     $12345678,-(A1)
+    MOVE.W     #$1234,D0
+    MOVE.W     #$1234,(A1)
+    MOVE.W     #$1234,(A1)+
+    MOVE.W     #$1234,-(A1)
+    *MOVE.L
+    MOVE.L     (A0)+,(A1)+  
+    MOVE.L     (A2)+,(A1)+  
+    MOVE.L     (A4)+,(A1)+  
+    MOVE.L     (A0)+,(A2)+  
+    MOVE.L     (A0)+,(A5)+  
+    MOVE.L     D0,(A0)+ 
+    MOVE.L     D0,(A1)+ 
+    MOVE.L     D0,(A3)+ 
+    MOVE.L     D0,(A4)+ 
+    MOVE.L     (A0)+,-(A1)  
+    MOVE.L     (A1)+,-(A1)  
+    MOVE.L     (A2)+,-(A1)   
+    MOVE.L     (A3)+,-(A1) 
+    MOVE.L     (A4)+,-(A1)   
+    MOVE.L     D2,D4   
+    MOVE.L     D2,(A5)
+    MOVE.L     D3,(A1)+  
+    MOVE.L     D4,-(A3) 
+    MOVE.L     A6,D6  
+    MOVE.L     A0,D0    
+    MOVE.L     A0,D0    
+    MOVE.L     A4,D6  
+    MOVE.L     A1,D0  
+    MOVE.L     A2,D0   
+    MOVE.L     A3,D0 
+    MOVE.L     A4,D0   
+    MOVE.L     A0,D0   
+    MOVE.L     A2,D6  
+    MOVE.L     A5,D0 
+    MOVE.L     $12,D1
+    MOVE.L     $12,(A0)
+    MOVE.L     $12,(A0)+
+    MOVE.L     $12,-(A0)
+    MOVE.L     $1234,D0
+    MOVE.L     $1234,(A1)
+    MOVE.L     $1234,(A1)+
+    MOVE.L     $1234,-(A1)
+    MOVE.L     $12345678,D0
+    MOVE.L     $12345678,(A1)
+    MOVE.L     $12345678,(A1)+
+    MOVE.L     $12345678,-(A1)
+    MOVE.L     #$12345678,D0
+    MOVE.L     #$12345678,(A1)
+    MOVE.L     #$12345678,(A1)+
+    MOVE.L     #$12345678,-(A1)
+    *MOVEA 
+    MOVEA.W   D0,A0
+    MOVEA.W   A0,A0
+    MOVEA.W   (A0),A0
+    MOVEA.W   (A0)+,A0
+    MOVEA.W   -(A0),A0
+    MOVEA.W   #2,A2    
+    MOVEA.W   $1234,A1        
+    MOVEA.W   $12345678,A3  
+    MOVEA.W   A0,A3
+    MOVEA.W   D0,A3
+    MOVEA.W   D0,A3  
+    MOVEA.L   D0,A0
+    MOVEA.L   A0,A0
+    MOVEA.L   (A0),A0
+    MOVEA.L   (A0)+,A0
+    MOVEA.L   -(A0),A0 
+    MOVEA.L   #2,A2        
+    MOVEA.L   $1234,A1        
+    MOVEA.L   $12345678, A3    
+    *MOVEM
+    MOVEM.W   A1-A7,$12
+    MOVEM.L   D1-D7,$12
+    MOVEM.W   A1/D7,$12
+    MOVEM.L   A1/D7,$12
+    MOVEM.W   A1-A7,$1234
+    MOVEM.L   D1-D7,$1234
+    MOVEM.W   A1/D7,$1234
+    MOVEM.L   A1/D7,$1234
+    MOVEM.W   A1-A7,$12345678
+    MOVEM.L   D1-D7,$12345678
+    MOVEM.W   A1/D7,$12345678
+    MOVEM.L   A1/D7,$12345678
+    MOVEM.W   $12,A1-A7
+    MOVEM.L   $12,D1-D7
+    MOVEM.W   $12,A1/D7
+    MOVEM.L   $12,A1/D7
+    MOVEM.W   $1234,A1-A7
+    MOVEM.L   $1234,D1-D7
+    MOVEM.W   $1234,A1/D7
+    MOVEM.L   $1234,A1/D7
+    MOVEM.W   $12345678,A1-A7
+    MOVEM.L   $12345678,D1-D7
+    MOVEM.W   $12345678,A1/D7
+    MOVEM.L   $12345678,A1/D7
+    MOVEM.W   D0/D1, (A3)
+    MOVEM.W   D0/D1,-(A3)    
+    MOVEM.W   D0/D1,$1234   
+    MOVEM.W   D0/D1,$12345678   
+    MOVEM.W   (A0),D3/D4
+    MOVEM.W   (A0)+,D3/D4
+    MOVEM.W   $1234,D3
+    MOVEM.W   $12345678,D3  
+*-------------------------------------------------------------------------------------------------------------
+* LEA TESTS
+*-------------------------------------------------------------------------------------------------------------
+    LEA       (A0),A0
+    LEA       (A5),A0
+    LEA       (A7),A0
+    LEA       (A0),A7
+    LEA       (A5),A7
+    LEA       (A7),A7
+    LEA       $DC01FD02,  A2
+    LEA       $1234, A1   
+    LEA       $12345678, A2
+    LEA       $ABCD1234,  A3  
+    LEA       $AB12,  A4  
+*-------------------------------------------------------------------------------------------------------------
+* LSL TESTS
+*-------------------------------------------------------------------------------------------------------------
+    LSL.B     D1,D2
+    LSL.W     D1,D2
+    LSL.W     (A1)
+    LSL.W     (A1)+
+    LSL.W     -(A1)
+    LSL.L     D1,D2
+    LSL.B     #$1,D2
+    LSL.W     #$2,D2
+    LSL.L     #$3,D2
+    LSL.W     $12
+    LSL.W     $1234
+    LSL.W     $12345678
+    LSL.B   #1,D1
+    LSR.B   #1,D0
+    LSR.B   #2,D1 
+    LSR.B   #3,D2
+    LSR.B   #4,D3
+    LSR.B   #5,D4
+    LSR.B   #6,D5
+    LSR.B   #7,D6
+    LSR.B   #8,D7
+    LSL.B   #1,D0
+    LSL.B   #2,D1
+    LSL.B   #3,D2
+    LSL.B   #4,D3
+    LSL.B   #5,D4
+    LSL.B   #6,D5
+    LSL.B   #7,D6
+    LSL.B   #8,D7
+    LSL   (A0) * have problem, it shows up as LSL.W (A0)
+    LSL   (A5)+ * have problem it shows up as LSL.W (A5)+
+    LSL   -(A2) * have problem it shows up as LSL.W -(A2)
+    LSL   $7000 * have problem it shows up as LSL.W 7000
+    LSL   $00010000 * have problem it shows up as LSL.W
+    *LSR
+    LSR.B     D1,D2
+    LSR.W     D1,D2
+    LSR.W     (A1)
+    LSR.W     (A1)+
+    LSR.W     -(A1)
+    LSR.L     D1,D2
+    LSR.B   #1,D0
+    LSR.B   #2,D1
+    LSR.B   #3,D2
+    LSR.B   #4,D3
+    LSR.B   #5,D4
+    LSR.B   #6,D5
+    LSR.B   #7,D6
+    LSR.B   #8,D7
+    LSR.W   D0,D1  
+    LSR.L   D1,D2
+    LSR   (A1) * have problem it shows up as LSR.W (A1)
+    LSR   (A6)+ * have problem it shows up as LSR.W (A6)+
+    LSR   -(A3) * have problem it shows up as LSR.W -(A3)
+    LSR   $7000  * have problem it shows up as LSR.W 7000
+    LSR   $00010000 * same reason have problem
+*-------------------------------------------------------------------------------------------------------------
+* ASR TESTS
+*-------------------------------------------------------------------------------------------------------------
+    *ASR
+    ASR.B     #$1,D2
+    ASR.W     #$2,D2
+    ASR.L     #$3,D2
+    ASR.W     $12
+    ASR.W     $1234
+    ASR.W     $12345678    
+    ASR.B   #1,D0
+    ASR.B   #2,D1
+    ASR.B   #3,D2
+    ASR.B   #4,D3
+    ASR.B   #5,D4
+    ASR.B   #6,D5
+    ASR.B   #7,D6
+    ASR.B   #8,D7
+    ASR.B   D0,D6
+    ASR.B   D2,D4
+    ASR.B   D3,D5
+    ASR.B   D1,D2
+    ASR.B   D3,D4
+    ASR.B   D6,D2
+    ASR.B   D6,D1
+    ASR.B   D7,D6
+    ASR.W   D0,D1
+    ASR.L   D0,D1
+    ASR   (A1) * have problem it shows up as ASR.W (A1)
+    ASR   (A2)+ * same have problem
+    ASR   -(A3) * same have problem
+    ASR   $1234 * same have problem
+    ASR   $00012345 * same have problem
+    *ASL
+    ASL.B     #$1,D2
+    ASL.W     #$2,D2
+    ASL.L     #$3,D2
+    ASL.W     $12
+    ASL.W     $1234
+    ASL.W     $12345678
+    ASL.B   #1,D0
+    ASL.B   #2,D1
+    ASL.B   #3,D2
+    ASL.B   #4,D3
+    ASL.B   #5,D4
+    ASL.B   #6,D5
+    ASL.B   #7,D6
+    ASL.B   #8,D7
+    ASL.B   D0,D6
+    ASL.B   D2,D4
+    ASL.B   D3,D5
+    ASL.B   D1,D2
+    ASL.B   D3,D4
+    ASL.B   D6,D2
+    ASL.B   D6,D1
+    ASL.B   D7,D6
+    ASL.W   D2,D3
+    ASL.L   D2,D3
+    ASL   (A1) * have problem it shows up as ASL.W (A1)
+    ASL   (A2)+ * same issue
+    ASL   -(A3) * same issue
+    ASL   $1234 * same issue
+    ASL   $00012345 * same issue
+*-------------------------------------------------------------------------------------------------------------
+* B BROS (Bxx) TESTS
+*-------------------------------------------------------------------------------------------------------------
+    BLE     TEST
+    BCC     TEST
+    BGT     TEST
+    BGT     TEST
+    BGT.L     TEST   
+    BGT.W     TEST 
+    BLE.W     TEST    
+    BLE.L     TEST  
+    BCC.W     TEST 
+    BCC.W     TEST 
+    BCC.W     TEST 
+    BGT.W     TEST 
+    BGT.W     TEST 
+    BGT.W     TEST 
+    BLE.W     TEST
+    BLE.W     TEST
+    BLE.W     TEST
+*-------------------------------------------------------------------------------------------------------------
+* JSR TESTS
+*-------------------------------------------------------------------------------------------------------------
+    JSR       (A0)
+    JSR       $1234
+    JSR       $12345678
+    JSR       TEST
+    JSR       TEST
+    JSR       TEST 
+    JSR       $0000
+    JSR       $A000
+    JSR       (A4)
+    JSR       TEST
+*-------------------------------------------------------------------------------------------------------------
+* RTS TESTS
+*-------------------------------------------------------------------------------------------------------------
+        RTS
+TEST    RTS 
 
-    SIMHALT             ; halt simulator
-    END    start        ; last line of source
+    SIMHALT
+    END    start
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
