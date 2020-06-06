@@ -58,6 +58,9 @@ Get_Input_End_ADR
     * Store user Input start address to A6  
     MOVE.L  D3, EndLocData
     MOVE.L  EndLocData, A6  
+    LEA     Extra_Space,    A1
+    MOVE.B  #14,            D0
+    TRAP    #15
     
 *________________________________________________________   
 *   Compare Starting Address and End Address see if it make sense       
@@ -157,7 +160,6 @@ Disassemble                     * while A5 is less than A6
         CMP.W #$80, D1           * 60 - 7F invalid
         BLT    INVALID_OPCODE    * invalid, need to move on to the next word
 
-        
         CMP.W #$8F, D1           * 1000 -> 80 - 8F -> OR
         BLE _OR
         
@@ -1417,7 +1419,7 @@ _ADD
     BRA     INVALID_OPCODE
 *____________________END OF ADD________________________________________
 
-*______________________GEN ROUTINES______________________________________________
+*______________________GENERAL ROUTINES______________________________________________
 _B
     MOVE.B  #'.',       (A2)+
     MOVE.B  #'B',       (A2)+
@@ -1534,7 +1536,7 @@ _L_EA_DN
     ANDI.W  #$0007,     D4
     JSR                 Register_Lists
     RTS
-*____________________END OF GEN ROUTINES________________________________________
+*____________________END OF GENERAL ROUTINES________________________________________
 
 _LSL_ASR
 *bit 6 and 7 determines memory or register
@@ -2196,13 +2198,16 @@ Invalid_Adr_Not_Even
     
 *__________________________Keep Decode after 25_________________________________    
 ToContinueProgram
+        LEA     Extra_Space,    A1
+        MOVE.B  #14,            D0
+        TRAP    #15
         LEA Mes_Continue_Read,  A1  
         MOVE.B  #14,    D0  
         TRAP    #15 
         *_________ get user input___________    
         MOVE.B  #5, D0  * char at d1    
         TRAP    #15 
-        CMP.B   #$20,   D1   * if it is space   
+        CMP.B   #$0D,   D1   * if it is space   
         BEQ ContinueProgram  
         CMP.B   #$51,   D1  * if it is Q    
         BEQ END_Program 
@@ -2213,6 +2218,9 @@ ContinueProgram
         MOVE.B  #0, ProgramCounter  * set  counter to 0 
         RTS
 END_Program
+        LEA     Extra_Space,    A1
+        MOVE.B  #14,            D0
+        TRAP    #15
         LEA Mes_TerminateProgram,   A1  * just print out message    
         MOVE.B  #14,    D0  
         TRAP    #15 
@@ -2227,48 +2235,27 @@ Finish  SIMHALT             ; halt simulator
 CR  EQU $0D     *   Carriage Return
 LF  EQU $0A     *   Line Feed
 Extra_Space DC.B    CR, LF, 0 
-Mes_Welcome     DC.B    'Welcome to Disassembler Program', CR,  LF
+Mes_Welcome     DC.B    'Welcome to the Disassembler Program', CR,  LF
                             DC.B    'Final Project for CSS 422',    CR, LF, 0
-Mes_Start_Adr       DC.B    'Please Enter Starting Location: $', 0
-Mes_End_Adr     DC.B    'Please Enter Ending Location: $', 0
+Mes_Start_Adr       DC.B    'Please enter start address (word): $', 0
+Mes_End_Adr     DC.B    'Please enter end address (word): $', 0
 
-Mes_Invalid DC.B   'The Address You provided is Invalid', CR,  LF,  0   
+Mes_Invalid DC.B   'The address you provided is invalid', CR,  LF,  0   
             
-Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending number',  CR, LF, 0
-Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0 
-Mes_Continue_Read   DC.B    'Please hit Space to conitnue read. Q or q to quit program', CR, LF, 0  
-Mes_TerminateProgram DC.B   'Ending the Program... Bye', CR, LF, 0    
- 
-*_______________________________________________________________________________
-* Variables to check if it goes to correct area
-Move_Print  DC.B    'MOVE', 0   
-BCC_Print   DC.B    'BCC',  0   
+Mes_EvenNumber_Error    DC.B    'The address you provided is not an even ending number',  CR, LF, 0
+Mes_Starting_Ending_Adr_Error   DC.B    'Your start address is bigger than or equal to the end address', CR, LF, 0 
+Mes_Continue_Read   DC.B    'Press enter to continue disassembling. Press Q or q to end early.', CR, LF, 0  
+Mes_TerminateProgram DC.B   'Ending the program...Bye', CR, LF, 0     
 
 * Define Storage
-*_____________________________________________________________________
 UserInput   DS.L    1   
 StartLocData    DS.L    1   * store starting address
 EndLocData  DS.L    1   *   Store ending address    
 ProgramCounter  DS.L    1   
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
+
     END    START        ; last line of source
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
