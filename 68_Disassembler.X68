@@ -713,7 +713,7 @@ _BCC
     BRA BXX_Displacement 
     
 _BLE
-    MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program 
+    MOVE.B  #'B',   (A2)+   * Store BLE at the end of this program 
     MOVE.B  #'L',   (A2)+   
     MOVE.B  #'E',   (A2)+  
     MOVE.B  #' ',   (A2)+   * little space
@@ -721,7 +721,7 @@ _BLE
     BRA  BXX_Displacement   
         
 _BGT
-    MOVE.B  #'B',   (A2)+   * Store BCC at the end of this program 
+    MOVE.B  #'B',   (A2)+   * Store BGT at the end of this program 
     MOVE.B  #'G',   (A2)+   
     MOVE.B  #'T',   (A2)+  
     MOVE.B  #' ',   (A2)+   * little space
@@ -839,11 +839,7 @@ _SUB
 * clear out before use
     MOVE.W  (A5)+,   D2  * load full opcode BCC, BGT, BLE same so D2 has 006x      
     MOVE.W  D2, D6    *     put it into d6 for safe bit play    
-    * shoud not call this maybe bad opmode or some weired register exist.   
-        *MOVE.B  #'S',   (A2)+   
-    *MOVE.B  #'U',   (A2)+   
-    *MOVE.B  #'B',   (A2)+   
-    *MOVE.B  #'.',   (A2)+   
+    * shoud not call this maybe bad opmode or some weired register exist.     
     * Basic idea
     * all sub 1001 do and operation with 0000 will just 0000
     * if it is ea - dn then 1001 xxx, xxx cannot be 000 so if you do and operation 000 then its always result as 0  
@@ -868,20 +864,20 @@ _SUB
     *_________Else__________Invalid Data_______________ 
     
 _Byte_EA_DN     
-    MOVE.B  #'S',   (A2)+  
-    MOVE.B  #'U',   (A2)+   
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
-    MOVE.B  #' ',   (A2)+   
+    MOVE.B  #'S',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'U',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'.',   (A2)+   * push it in this program ending memory
+    MOVE.B  #'B',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
+    MOVE.B  #' ',   (A2)+   * push it in this program ending memory
     JSR Calculate_EA_Mode          
     * land it on here   
-    MOVE.B  #',',     (A2)+   
+    MOVE.B  #',',     (A2)+     * push it in this program ending memory
     MOVE.B  #'D',    (A2)+   *Always D   
     MOVE.W  D2,   D4    
     ANDI.W  #$0E00, D4  * compare with 1110 just to check the register field    
-    LSR.W   #4, D4  
+    LSR.W   #4, D4      
     LSR.W   #4, D4  
     LSR.W   #1, D4    
     *ROL.W   #4, D4  
