@@ -2410,13 +2410,13 @@ ToContinueProgram
         BEQ END_Program 
         BRA ToContinueProgram   
 ContinueProgram 
-        MOVE.B  #0, ProgramCounter
+        MOVE.B  #0, ProgramCounter  * set  counter to 0 
         RTS
 END_Program
-        LEA Mes_TerminateProgram,   A1  
+        LEA Mes_TerminateProgram,   A1  * just print out message    
         MOVE.B  #14,    D0  
         TRAP    #15 
-        BRA Finish  
+        BRA Finish  * end program   
     
 Finish  SIMHALT             ; halt simulator
         
@@ -2453,6 +2453,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
