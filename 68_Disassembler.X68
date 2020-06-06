@@ -2441,79 +2441,7 @@ Mes_EvenNumber_Error    DC.B    'The Address You provided is not even ending num
 Mes_Starting_Ending_Adr_Error   DC.B    'Your Starting Address is bigger or equal than Ending Adrress', CR, LF, 0 
 Mes_Continue_Read   DC.B    'Please hit Space to conitnue read. Q or q to quit program', CR, LF, 0  
 Mes_TerminateProgram DC.B   'Ending the Program... Bye', CR, LF, 0    
-
-RTS_VALUE               DC.W        'RTS',0     * Requested
-JSR_VALUE               DC.W        'JSR',0     * Requested
-LEA_VALUE               DC.W        'LEA',0     * Requested
-NEG_VALUE               DC.W        'NEG',0     * Requested
-CMPI_VALUE              DC.W        'CMPI',0    * Requested
-CMP_VALUE               DC.W        'CMP',0     * Requested
-SUB_VALUE               DC.W        'SUB',0     * Requested
-SUBQ_VALUE              DC.W        'SUBQ',0    * Requested
-DIVS_VALUE              DC.W        'DIVS',0    * Requested
-BRA_VALUE               DC.W        'BRA',0     * Requested
-MULS_VALUE              DC.W        'MULS',0    * Requested
-ADD_VALUE               DC.W        'ADD',0     * Requested
-ADDA_VALUE              DC.W        'ADDA',0    * Requested
-AS_VALUE                DC.W        'AS',0      * Requested ASR, ASL
-LS_VALUE                DC.W        'LS',0      * Requested LSR, LSL
-RO_VALUE                DC.W        'RO',0      * Requested ROR, ROL
-BCLR_VALUE              DC.W        'BCLR',0    * Unfinished
-LEFT_DIRECTION          DC.W        'L',0
-RIGHT_DIRECTION         DC.W        'R',0
-OR_VALUE                DC.W        'OR',0      * Extra
-MOVEA_VALUE             DC.W        'MOVEA',0   * Requested
-MOVE_VALUE              DC.W        'MOVE',0    * Requested
-MOVEQ_VALUE             DC.W        'MOVEQ',0   * Extra
-DATA_VALUE              DC.W        'DATA',0
-HIGHER_VALUE            DC.W        'HI',0
-LOWER_OR_SAME_VALUE     DC.W        'LS',0
-CARRY_CLEAR_VALUE       DC.W        'CC',0
-NOT_EQUAL_VALUE         DC.W        'NE',0
-EQUAL_VALUE             DC.W        'EQ',0
-OVERFLOW_CLEAR_VALUE    DC.W        'VC',0 *
-OVERFLOW_SET_VALUE      DC.W        'VS',0
-PLUS_VALUE              DC.W        'PL',0
-MINUS_VALUE             DC.W        'MI',0
-GREATER_OR_EQUAL_VALUE  DC.W        'GE',0 *
-LESS_THAN_VALUE         DC.W        'LT',0 *
-GREATER_THAN_VALUE      DC.W        'GT',0
-LESS_OR_EQUAL_VALUE     DC.W        'LE',0
-CARRY_SET_VALUE         DC.W        'CS',0 *
-SR_VALUE                DC.W        'SR',0
-CCR_VALUE               DC.W        'CCR',0
-OPENING_BRACKET         DC.W        '(',0
-CLOSING_BRACKET         DC.W        ')',0
-PLUS_SIGN               DC.W        '+',0
-MINUS_SIGN              DC.W        '-',0
-DATA_REGISTER           DC.W        'D',0
-ADDRESS_REGISTER        DC.W        'A',0
-COMMA                   DC.W        ',',0
-SPACE                   DC.W        ' ',0
-BINARY_SYMBOL           DC.W        '%',0
-HEX_SYMBOL              DC.W        '$',0
-IMMEDIATE_DATA_SYMBOL   DC.W        '#',0
-BYTE_SUFFIX             DC.W        '.B',0
-WORD_SUFFIX             DC.W        '.W',0
-LONG_SUFFIX             DC.W        '.L',0
-ZERO                    DC.W        '0',0
-ONE                     DC.W        '1',0
-TWO                     DC.W        '2',0
-THREE                   DC.W        '3',0
-FOUR                    DC.W        '4',0
-FIVE                    DC.W        '5',0
-SIX                     DC.W        '6',0
-SEVEN                   DC.W        '7',0
-*EIGHT                   DC.W        '8',0
-NINE                    DC.W        '9',0
-A                       DC.W        'A',0
-B                       DC.W        'B',0
-C                       DC.W        'C',0
-D                       DC.W        'D',0
-E                       DC.W        'E',0
-F                       DC.W        'F',0
-
-   
+ 
 *_______________________________________________________________________________
 * Variables to check if it goes to correct area
 Move_Print  DC.B    'MOVE', 0   
@@ -2528,6 +2456,7 @@ ProgramCounter  DS.L    1
 MoveInstructionCounter  DS.L    1   
 ProgramEnd DS.L 1   *   variable to store location where this program ends
     END    START        ; last line of source
+
 
 
 
