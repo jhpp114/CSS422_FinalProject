@@ -1331,406 +1331,210 @@ Register_111
     RTS 
 *______________________END OF SUB EA_____________________________________________
 
-*______________________GEN ROUTINES______________________________________________
-_CLEAR_DN   *generalized subroutine for clearing all data registers before next use
-    CLR.L   D2      
-    CLR.L   D3  
-    CLR.L   D5  
-    CLR.L   D6  
-    CLR.L   D7
-    RTS
-
-_N  *subroutine for pushing n for dn or an based on d6
-    CMP.W   #0, D6
-    BEQ     _0
-    CMP.W   #1, D6
-    BEQ     _1
-    CMP.W   #2, D6
-    BEQ     _2
-    CMP.W   #3, D6
-    BEQ     _3
-    CMP.W   #4, D6
-    BEQ     _4
-    CMP.W   #5, D6
-    BEQ     _5
-    CMP.W   #6, D6
-    BEQ     _6
-    BRA     _7
-_N_END
-    RTS
-
-_0
-    MOVE.B  #'0',   (A2)+
-    BRA     _N_END
-
-_1
-    MOVE.B  #'1',   (A2)+
-    BRA     _N_END
-
-_2
-    MOVE.B  #'2',   (A2)+
-    BRA     _N_END
-
-_3
-    MOVE.B  #'3',   (A2)+
-    BRA     _N_END
-
-_4
-    MOVE.B  #'4',   (A2)+
-    BRA     _N_END
-
-_5
-    MOVE.B  #'5',   (A2)+
-    BRA     _N_END
-
-_6
-    MOVE.B  #'6',   (A2)+
-    BRA     _N_END
-
-_7
-    MOVE.B  #'7',   (A2)+
-    BRA     _N_END
-*____________________END OF GEN ROUTINES________________________________________
-
 *______________________CMP______________________________________________
 _CMP
-    JSR     _CLEAR_DN
     MOVE.B  #'C',   (A2)+  
     MOVE.B  #'M',   (A2)+   
-    MOVE.B  #'P',   (A2)+   
-    JSR     PREPARE_DATA_REG    *preps D2-D5
-                                *d2 is now bits 8-6
-                                *d3 is now bits 11-9
-                                *d4 is now bits 5-3
-                                *d5 is now bits 2-0
-    CMP.W   #0, D2
-    BEQ     _CMP_BYTE_DN_EA
-    CMP.W   #1, D2
-    BEQ     _CMP_WORD_DN_EA
-    CMP.W   #2, D2
-    BEQ     _CMP_LONG_DN_EA
-_CMP_END
-    RTS
-
-_CMP_BYTE_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA     _CMP_END
-
-_CMP_WORD_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA     _CMP_END
-
-_CMP_LONG_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA     _CMP_END
+    MOVE.B  #'P',   (A2)+
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    BRA     INVALID_OPCODE
 *____________________END OF CMP________________________________________
 
 *______________________AND______________________________________________
 _AND
-    JSR     _CLEAR_DN
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'N',   (A2)+   
     MOVE.B  #'D',   (A2)+   
-    JSR     PREPARE_DATA_REG    *preps D2-D5
-                                *d2 is now bits 8-6
-                                *d3 is now bits 11-9
-                                *d4 is now bits 5-3
-                                *d5 is now bits 2-0
-    CMP.W   #0, D2
-    BEQ     _AND_BYTE_EA_DN
-    CMP.W   #4, D2
-    BEQ     _AND_BYTE_DN_EA
-    CMP.W   #1, D2
-    BEQ     _AND_WORD_EA_DN
-    CMP.W   #5, D2
-    BEQ     _AND_WORD_DN_EA
-    CMP.W   #2, D2
-    BEQ     _AND_LONG_EA_DN
-    CMP.W   #6, D2
-    BEQ     _AND_LONG_DN_EA
-_AND_END
-    RTS
-
-_AND_BYTE_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _AND_END
-
-_AND_BYTE_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _AND_END
-
-_AND_WORD_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _AND_END
-
-_AND_WORD_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _AND_END
-
-_AND_LONG_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+  
-    MOVE.B  #' ',   (A2)+  
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _AND_END
-
-_AND_LONG_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+  
-    MOVE.B  #' ',   (A2)+  
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _AND_END
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0100, D6  
+    BEQ     _B_DN_EA
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0140, D6  
+    BEQ     _W_DN_EA
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    CMP.W   #$0180, D6  
+    BEQ     _L_DN_EA
+    BRA     INVALID_OPCODE
 *____________________END OF AND________________________________________
 
 *______________________OR______________________________________________
 _OR
-    JSR     _CLEAR_DN
     MOVE.B  #' ',   (A2)+  
     MOVE.B  #'O',   (A2)+   
     MOVE.B  #'R',   (A2)+   
-    JSR     PREPARE_DATA_REG    *preps D2-D5
-                                *d2 is now bits 8-6
-                                *d3 is now bits 11-9
-                                *d4 is now bits 5-3
-                                *d5 is now bits 2-0
-    CMP.W   #0, D2
-    BEQ     _OR_BYTE_EA_DN
-    CMP.W   #4, D2
-    BEQ     _OR_BYTE_DN_EA
-    CMP.W   #1, D2
-    BEQ     _OR_WORD_EA_DN
-    CMP.W   #5, D2
-    BEQ     _OR_WORD_DN_EA
-    CMP.W   #2, D2
-    BEQ     _OR_LONG_EA_DN
-    CMP.W   #6, D2
-    BEQ     _OR_LONG_DN_EA
-_OR_END
-    RTS
-
-_OR_BYTE_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_EA_DN
-
-_OR_BYTE_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_DN_EA
-
-_OR_WORD_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_EA_DN
-
-_OR_WORD_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_DN_EA
-
-_OR_LONG_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_EA_DN
-
-_OR_LONG_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    BRA     _OR_PARAM_DN_EA
-
-_OR_PARAM_EA_DN
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA     _OR_END
-
-_OR_PARAM_DN_EA
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA     _OR_END
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0100, D6  
+    BEQ     _B_DN_EA
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0140, D6  
+    BEQ     _W_DN_EA
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    CMP.W   #$0180, D6  
+    BEQ     _L_DN_EA
+    BRA     INVALID_OPCODE
 *____________________END OF OR________________________________________
 
 *______________________ADD_____________________________________________
 _ADD
-    JSR     _CLEAR_DN
     MOVE.B  #'A',   (A2)+  
     MOVE.B  #'D',   (A2)+   
     MOVE.B  #'D',   (A2)+   
-    JSR     PREPARE_DATA_REG    *preps D2-D5
-                                *d2 is now bits 8-6
-                                *d3 is now bits 11-9
-                                *d4 is now bits 5-3
-                                *d5 is now bits 2-0
-    CMP.W   #0, D2
-    BEQ     _ADD_BYTE_EA_DN
-    CMP.W   #4, D2
-    BEQ     _ADD_BYTE_DN_EA
-    CMP.W   #1, D2
-    BEQ     _ADD_WORD_EA_DN
-    CMP.W   #5, D2
-    BEQ     _ADD_WORD_DN_EA
-    CMP.W   #2, D2
-    BEQ     _ADD_LONG_EA_DN
-    CMP.W   #6, D2
-    BEQ     _ADD_LONG_DN_EA
-_ADD_END
+    MOVE.W  (A5)+,   D2
+    MOVE.W  D2, D6
+    ANDI.W  #$01C0, D6
+    CMP.W   #$0000, D6 
+    BEQ     _B_EA_DN  
+    CMP.W   #$0100, D6  
+    BEQ     _B_DN_EA
+    CMP.W   #$0040, D6  
+    BEQ     _W_EA_DN 
+    CMP.W   #$0140, D6  
+    BEQ     _W_DN_EA
+    CMP.W   #$0080,  D6      
+    BEQ     _L_EA_DN  
+    CMP.W   #$0180, D6  
+    BEQ     _L_DN_EA
+    BRA     INVALID_OPCODE
+*____________________END OF ADD________________________________________
+
+*______________________GEN ROUTINES______________________________________________
+_B
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'B',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
     RTS
 
-_ADD_BYTE_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _ADD_END
+_W
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'W',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    RTS
 
-_ADD_BYTE_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'B',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _ADD_END
+_L
+    MOVE.B  #'.',       (A2)+
+    MOVE.B  #'L',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    MOVE.B  #' ',       (A2)+
+    RTS
 
-_ADD_WORD_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _ADD_END
+_B_DN_EA
+    JSR                 _B
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
 
-_ADD_WORD_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'W',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _ADD_END
+_B_EA_DN
+    JSR                 _B
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
 
-_ADD_LONG_EA_DN
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+  
-    MOVE.B  #' ',   (A2)+  
-    MOVE.B  #' ',   (A2)+
-    JSR     EA1
-    MOVE.B  #',',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    BRA _ADD_END
+_W_DN_EA
+    JSR                 _W
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
 
-_ADD_LONG_DN_EA
-    MOVE.B  #'.',   (A2)+
-    MOVE.B  #'L',   (A2)+  
-    MOVE.B  #' ',   (A2)+  
-    MOVE.B  #' ',   (A2)+
-    MOVE.B  #'D',   (A2)+
-    MOVE.L  D3,     D6
-    JSR     _N
-    MOVE.B  #',',   (A2)+
-    JSR     EA1
-    BRA _ADD_END
-*____________________END OF ADD________________________________________
+_W_EA_DN
+    JSR                 _W
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
+
+_L_DN_EA
+    JSR                 _L
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    MOVE.B  #',',       (A2)+ 
+    JSR                 Calculate_EA_Mode
+    RTS
+
+_L_EA_DN
+    JSR                 _L
+    JSR                 Calculate_EA_Mode
+    MOVE.B  #',',       (A2)+ 
+    MOVE.B  #'D',       (A2)+
+    MOVE.W  D2,         D4  
+    ANDI.W  #$0E00,     D4
+    LSR.W   #4,         D4
+    LSR.W   #4,         D4 
+    LSR.W   #1,         D4  
+    MOVE.W  D4,         D5
+    MOVE.W  D4,         D3
+    ANDI.W  #$0007,     D4
+    JSR                 Register_Lists
+    RTS
+*____________________END OF GEN ROUTINES________________________________________
 
 _LSL_ASR
 *bit 6 and 7 determines memory or register
@@ -2289,8 +2093,8 @@ READLONGWORD1
    
     JSR GetLongword_Value   
     RTS
+
 PRINT_ABSOLUTE_ADDRESS1
-    
     CMP.B #0, D5
     BEQ WORD_ADDR1
     CMP.B #1, D5
