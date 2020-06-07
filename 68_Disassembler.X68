@@ -83,10 +83,10 @@ Check_Input_Address
     
 *_______End of User Input Adr______________________________ 
 CheckProgramCounter 
+    CMP.L   A5, A6  
+    BEQ REACH_END_ADR
     CMP.B   #25,    ProgramCounter  * check program counter 
     BNE Disassemble_Loop        
-    CMP.L   A5, A6  
-    BEQ REACH_END_ADR 
     JSR ToContinueProgram 
 Disassemble_Loop
     CMP.B   #25,    ProgramCounter  
@@ -2079,6 +2079,7 @@ ProgramEnd                      DS.L    1   *Variable to store location where th
 *-----------------------------------------------------------------------------------------------------------------------
 
                                 END     START
+
 
 
 *~Font name~Courier New~
